@@ -3,10 +3,43 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Secrets</title>
+  <title>MoseyForward</title>
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
+
+<div class="container">
+  <header class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-4 border-bottom">
+    <div class="col-sm-3">
+          <img class="round-corners" src="images/arrow.png" height="33" alt="stained glass arrow" title = "Stained Glass Arrow">
+          <a class="btn btn-light btn-lg" href="/" role="button">MoseyForward</a>
+    </div>
+
+    <ul class="nav col-sm-6 justify-content-center">
+      <a class="btn btn-light" href="/content" role="button">New Chart</a>
+      <a class="btn btn-light disabled" href="/content" role="button">My Charts</a>
+      <a class="btn btn-light" href="/content" role="button">About</a>
+    </ul>
+
+    <div class="col-sm-3 text-end justify-content-center ">
+      <% if (is_auth) { %>
+        <a class="btn btn-light" href="/logout" role="button">Logout</a>
+        <a class="btn btn-light" href="/changepassword" role="button">Change Password</a>
+      <% } else { %>
+        <a class="btn btn-light" href="/login" role="button">Login</a>
+        <a class="btn btn-dark" href="/register" role="button">Register</a>
+      <% } %>
+    </div>
+  </header>
+</div>
+
+<!-- <nav class="navbar bg-dark fixed-top" data-bs-theme="dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Mosaic Forward</a>
+    <a class="navbar-brand" href="#">Mosaic Forward2</a>
+    <a class="navbar-brand" href="#">Mosaic Forward3</a>
+  </div>
+</nav> -->
