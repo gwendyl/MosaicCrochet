@@ -62,7 +62,7 @@ exports.login = async (req, res) => {
 
     const email = req.body.username;
     const password = md5(req.body.password);
-    
+
     if (!email || !password) {
         this.renderLogin(res, "Username or Password not present")
         return
@@ -88,6 +88,7 @@ exports.login = async (req, res) => {
     }
 };
 
+        
 
 exports.register = async (req, res) => {
     const email = req.body.username;
@@ -111,7 +112,7 @@ exports.register = async (req, res) => {
         createdAt: Date.now(),
         }).save();
     
-        const link = buildSetPasswordURL(regToken, email,"");
+        const link =`http://${req.headers.host}/registerPassword?token=${regToken}&email=${email}&userMsg=""`;
         sendTemplateEmail(email, "d-6f4569924db3494d910b2fde1bbf4a55", link);
         this.renderHome(res, "Please check your email for the link to complete account setup")
         return;
@@ -239,11 +240,19 @@ exports.registerPassword = async (req, res, usermsg) => {
         return;
     }
 
-    // establish session - I don't know if this is working yet
-    req.session.authenticated = true;
-    req.session.user = email;
 
     try {
+
+        await new User({
+        email: email,
+        password: password,
+        createdAt: Date.now(),
+        }).save();
+
+        // establish session - I don't know if this is working yet
+        req.session.authenticated = true;
+        req.session.user = email;
+
         // delete registration token
         await regToken.deleteOne();
         this.renderContent(req, res, "");
@@ -337,14 +346,6 @@ exports.renderResetPassword = async (req, res, usermsg) => {
 exports.renderSendLinkForm = (res,usermsg) => {
     res.render("resetLink", {userMsg: usermsg, is_auth: false});
 }   
-
-//////////////////////////////
-// internal utility functions
-//////////////////////////////
-function buildSetPasswordURL(regToken, email, usrmsg) {
-    const clientURL = 'http://localhost:'+process.env.PORT;
-    return `${clientURL}/registerPassword?token=${regToken}&email=${email}&userMsg="${usrmsg}"`;
-}
 
 //////////////////////////////
 // database connecion
