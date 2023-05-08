@@ -356,7 +356,6 @@ async function main() {
     const options = {
         dbName: 'mosaiccrochet'
     }
-    console.log(process.env.MONGODBCRED.substring(14));
     await mongoose.connect(uri, options);
 }
 
