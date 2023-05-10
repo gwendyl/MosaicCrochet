@@ -2,23 +2,19 @@ require('dotenv').config()
 const express = require('express')
     , session = require('express-session')
     , ejs = require('ejs')
+;
+
 //const session = require('express-session');
 
 const users = require('./controllers/users');
-
-// To prevent unauthenticated users from accessing the private route, take the token from the cookie, verify the token, and redirect users based on role.
-// You'll get the token from the client using a node package called cookie-parser. 
-//const cookieParser = require("cookie-parser");
-
-//const passport = require("passport"); 
-//const passportLocalMongoose = require("passport-local-mongoose");
+const patterns = require('./controllers/patterns');
 
 const port = process.env.PORT;
 const app = express(); 
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
-//app.use(cookieParser());
+
 app.use(
     session({
         secret: process.env.SESSIONSECRET,
@@ -73,5 +69,5 @@ app.post("/resetlink", async function(req, res) {users.sendResetLink(req, res);}
 
 app.get("/logout", function (req, res) {users.logout(req, res);});
 
-app.get("/content", function (req, res) {users.renderContent(req,res)});
-
+app.get("/content", function (req, res) {patterns.renderRound(req,res)});
+app.post("/roundSettings", function(req,res) {patterns.renderRound(req,res)});

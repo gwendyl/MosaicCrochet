@@ -1,3 +1,5 @@
+const patterns = require('./patterns');
+
 const {MongoClient} = require('mongodb')
     , mongoose = require('mongoose')
     , md5 = require("md5")
@@ -291,7 +293,7 @@ exports.sendResetLink = async (req, res) => {
 
 exports.authorized = (req, res) => {
     if(req.session.authenticated) {
-        res.render("secrets", { is_auth: true });
+        patterns.renderRound(req,res,true);
     } else {
         this.renderLogin(res, "");
     }

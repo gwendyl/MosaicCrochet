@@ -7,10 +7,12 @@
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <link rel="stylesheet" href="css/styles.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+</script>
+
 </head>
 
 <body>
-
 <div class="container">
   <header class="d-flex flex-wrap align-items-center justify-content-center py-3 mb-4 border-bottom">
     <div class="col-sm-3">
@@ -35,6 +37,12 @@
     </div>
   </header>
 </div>
+
+<% if (userMsg) { %>
+  <div class="alert alert-warning" role="alert">
+    <%= userMsg %>
+  </div>
+  <% } %>
 
 <!-- <nav class="navbar bg-dark fixed-top" data-bs-theme="dark">
   <div class="container-fluid">
