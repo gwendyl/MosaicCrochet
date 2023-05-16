@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-
+const {MongoClient} = require('mongodb')
+    , mongoose = require('mongoose')
+    ;
 
 /////////////////////////////////////
 // DB Models
@@ -10,6 +11,7 @@ const patternSchema = new mongoose.Schema(
         baseStitchCount: Number,
         stitchSize: Number,
         colors: Array,
+        stitches: Array,
     },
     {
         timestamps: true,
@@ -19,6 +21,26 @@ const patternSchema = new mongoose.Schema(
     });
     const Pattern = mongoose.model('Pattern', patternSchema);
 
+
+/////////////////////////////
+//
+/////////////////////////////
+exports.saveCurrentPattern = async (req, res, usermsg) => {
+
+ try {
+
+    await new Pattern({
+    nbrColors: req.body.nbrColors,
+    baseStitchCount: req.body.baseStitches,
+    stitchSize: req.body.stitchSize,
+    createdAt: Date.now(),
+    }).save();
+
+    // establish session - I don't know if this is working yet
+} catch (error) {
+    console.console.log(error);
+}
+}
 
 
 //////////////////////////////
@@ -39,5 +61,6 @@ exports.renderRound = (req, res, is_auth) => {
     };
 
     res.render("round", {userMsg: "", is_auth: is_auth, criteria: roundCriteria, req: req});
-
 }
+
+        

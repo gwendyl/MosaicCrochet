@@ -14,6 +14,7 @@ const app = express();
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({extended: true}));
+app.use(express.json({ limit: '300kb' }));
 
 app.use(
     session({
@@ -71,3 +72,8 @@ app.get("/logout", function (req, res) {users.logout(req, res);});
 
 app.get("/content", function (req, res) {patterns.renderRound(req,res)});
 app.post("/roundSettings", function(req,res) {patterns.renderRound(req,res)});
+
+app.post("/savePattern",   function(req,res) {
+    console.log('app.js received savePattern post');
+    console.log(req.body);
+});
