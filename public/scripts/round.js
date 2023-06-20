@@ -1,78 +1,51 @@
 
 $(document).ready(function () {
 
-    let canvas = document.getElementById('myCanvas');
-    
-    let nbrColorElement = document.getElementById('nbrColors')
-    let baseStitchQty = $('#baseStitches').val();
-    let nbrColors = nbrColorElement.value;
-    let bigR = $('#stitchSize').val();
-
-    // bigR = 10;
-
-    console.log( );  
-    let randomize = false;
-    const randomThreshold = .5;
-
-    let geoPattern = false;
-    const multFactor = 3;
+    //////////////////////////////////////////////////////
+    // if local storeage not initiated, default them
+    //////////////////////////////////////////////////////
+    initializeLocalStorage();
+        
+    // set the form fields
+    $('#nbrColors').val(nbrColors());
+    $('#baseStitches').val(baseStitchQty());
+    $('#stitchSize').val(stitchSize());
+    $('#color0').val(colorsArray()[0]);
+    $('#color1').val(colorsArray()[1]);
+    $('#color2').val(colorsArray()[2]);
+    $('#color3').val(colorsArray()[3]);
 
     // hard to drop down onto first circle or two
     let startRound = 3;  // cant land on rounds 0 or 1
     // show numbers on stitches.  Useful for debugging
     let showNbrs = false;
 
-    let colors = [];
-    switch (nbrColors) {
-        case "2":
-            colors = [document.getElementById('color0').value, 
-                      document.getElementById('color1').value];
-            break;
-        case "3":
-            colors = [document.getElementById('color0').value, 
-                      document.getElementById('color1').value,
-                      document.getElementById('color2').value];
-            break;
-        case "4":
-            colors = [document.getElementById('color0').value, 
-                      document.getElementById('color1').value,
-                      document.getElementById('color2').value,
-                      document.getElementById('color3').value];
-            break;
-        default:
-            colors = [document.getElementById('color0').value, 
-                      document.getElementById('color1').value];
-        }
+    let canvas = $('#myCanvas')[0];
+    let ctx = canvas.getContext("2d");
 
     originX = canvas.width / 2;
     originY = canvas.height / 2;
-    let radiusX = bigR * .6;
-    let radiusY = bigR;
+    let radiusX = stitchSize() * .6;
+    let radiusY = stitchSize();
 
     // compute maxiumum number of stitches that will fit
-    let rndCount = Math.min(canvas.width / (4 * bigR) - 1, canvas.height / (4 * bigR) - 1);
+    let rndCount = Math.min(canvas.width / (4 * stitchSize()) - 1, canvas.height / (4 * stitchSize()) - 1);
     let rounds = [];
     let stitches = [];
-    let shortStitches = [];
 
     if (canvas.getContext) {
-        var ctx = canvas.getContext('2d');
         drawStartingCircle();
         renderColorPickers();
         constructStitches();
+        reconstructFromLocal();
 
-        if (randomize) {
-            createRandomPattern();
-        }
-
-        if (geoPattern) {
-            createGeoPattern();
-        }
+    
+       // saveLocally();
         drawAllStitches();
         writeRoundDetails();
     }
 
-    nbrColorElement.addEventListener('change', (e) => {
+    $('#nbrColors')[0].addEventListener('change', (e) => {
         renderColorPickers();
     });
 
@@ -87,37 +60,54 @@ $(document).ready(function () {
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
                 attemptDropDown(stitch);
+                //saveLocally();
                 drawAllStitches();
                 writeRoundDetails();
+                return;
             }
         })
     });
 
     
-    let saveButton = document.getElementById('saveButton');
-    saveButton.addEventListener("click", function() {
+    let goButton = document.getElementById('goButton');
+    goButton.addEventListener("click", function() {
 
-        stitches.forEach(stitch => {
-            shortStitches.push({
-                id: stitch.id,  //save
-                cid:stitch.currColorId,
-                dd: (stitch.isDropDown) ? 1 : 0
-            });
-        })
-        const stitchesJson = JSON.stringify(shortStitches);
+        // update local storage with new values
+        localStorage.setItem('bq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 6);
+        localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
+        let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
+        let colors = [];
+        colors.push($('#color0').val());
+        colors.push($('#color1').val());
+        if (nbrColors > 2) colors.push($('#color2').val());
+        if (nbrColors > 3) colors.push($('#color3').val());
+ 
+        localStorage.setItem('ca', JSON.stringify(colors));        
 
-        axios.post('/savePattern', {
-            stitches: stitchesJson
-          })
-          .then(function (response) {
-            console.log(response);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+
+        // must reset chart
+        stitches = [];
+        // let shortStitches = [];
+        localStorage.setItem('sts', JSON.stringify([]));
+
+        //saveLocally();
+
+        constructStitches();
+        drawAllStitches();
+        writeRoundDetails();
+        return;
 
     });
 
+
+    let saveButton = document.getElementById('saveButton');
+    saveButton.addEventListener("click", function() {
+
+        saveNow();
+
+    });
+
+    
     let printButton = document.getElementById('printButton');
     printButton.addEventListener("click", function() {
         const dataUrl = canvas.toDataURL();
@@ -162,11 +152,6 @@ $(document).ready(function () {
     function constructStitches() {
         let ss = [];
 
-        let c = document.getElementById("myCanvas");
-        let ctx = c.getContext("2d");
-
-
-
         // constant for all stitches
         let startAngle = 0;
         let endAngle = 2 * Math.PI;
@@ -179,7 +164,7 @@ $(document).ready(function () {
             let currentRound = {
                 id: j,
                 humanId: j + 1,
-                stitchCount: baseStitchQty * (j + 1),
+                stitchCount: baseStitchQty() * (j + 1),
                 baseColorId: currColorId,
                 firstStitchNbr: id
             }
@@ -207,7 +192,7 @@ $(document).ready(function () {
                 // drop down stitch = current stitch number + the number of stitches around + 
                 // the incremental amount to increase the stitch count for the next row
                 var parentStitchId;
-                let rawStitchNbr = id - j * baseStitchQty - increment;
+                let rawStitchNbr = id - j * baseStitchQty() - increment;
                 if (j > 0) parentStitchId = Math.round(rawStitchNbr);
 
 
@@ -221,12 +206,12 @@ $(document).ready(function () {
                 // reconstruct relevant information from saved shortStitches
                 let stitchColorId = currColorId;
                 let isDropDown = false;
-                if ( shortStitches.length >0) {
-                    if (stitchColorId != shortStitches[id].cid) {
-                        stitchColorId = shortStitches[id].cid;
-                        isDropDown = (shortStitches[id].dd==1) ? true : false;
-                    }
-                }
+                // if ( shortStitches.length >0) {
+                //     if (stitchColorId != shortStitches[id].cid) {
+                //         stitchColorId = shortStitches[id].cid;
+                //         isDropDown = (shortStitches[id].dd==1) ? true : false;
+                //     }
+                // }
                 // if(shortStitches.length>0){
                 //     if (stitchColorId != shortStitches[id].currColorId) stitchColorId = shortStitches[id].currColorId;                }
                 // }
@@ -253,10 +238,16 @@ $(document).ready(function () {
             }
 
             currColorId++;
-            if (currColorId >= colors.length) currColorId = 0;
+            if (currColorId >= nbrColors()) currColorId = 0;
         }
     }
 
+    function reconstructFromLocal(){
+        console.log('reconstcutfrom local');
+        shortStitches().forEach(stitch => {
+            attemptDropDown(stitches[stitch]);
+        })
+    }
     function getParent(childId) {
         let parentStitchId;
         stitches.forEach(stitch => {
@@ -277,18 +268,41 @@ $(document).ready(function () {
         return baseColorId;
     }
 
+    // function saveLocally() {
+    //     window.localStorage.setItem("bq", baseStitchQty);
+    //     window.localStorage.setItem("ca", JSON.stringify(colors));
+    //     window.localStorage.setItem("sz", bigR);
+    //     // if there are problems with initial stitchhes not getting stored properly, check the timing of this
+    //     // I am concerned that this setItem is firing before the above logic has completed.
+    //     shortStitches = [];
+    //     stitches.forEach(stitch => {
+    //         if (stitch.isDropDown) {
+    //             shortStitches.push(stitch.id);
+    //         }
+    //     })
+    //     window.localStorage.setItem("sts", JSON.stringify(shortStitches));
+
+    //     window.console.log('-- end of save locally--');
+    //     window.console.log(localStorage.getItem("bq"));
+    //     window.console.log(JSON.parse(localStorage.getItem("ca")));
+    //     window.console.log(localStorage.getItem("sz"));
+    //     window.console.log(JSON.parse(localStorage.getItem("sts")));
+    // }
+
     function drawAllStitches() {
+        console.log(stitches.length);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
         
         stitches.forEach(stitch => {
             // draw a little oval behind the stitch to indicate the base color of that round
-            ctx.fillStyle = colors[getBaseColorId(stitch.roundId)];
+            ctx.fillStyle = colorsArray()[getBaseColorId(stitch.roundId)];
             ctx.beginPath();
             ctx.ellipse(stitch.x, stitch.y, stitch.radiusY, stitch.radiusX / 2, stitch.theta, stitch.startAngle, stitch.endAngle);
             ctx.stroke();
             ctx.fill();
 
-            ctx.fillStyle = colors[stitch.currColorId];
+            ctx.fillStyle = colorsArray()[stitch.currColorId];
 
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -328,7 +342,10 @@ $(document).ready(function () {
 
 
         })
+
+        saveNow();
     }
+
 
     function getIdCoords(id) {
         let pos;
@@ -345,13 +362,10 @@ $(document).ready(function () {
     };
 
     function drawStartingCircle() {
-        let c = document.getElementById("myCanvas");
-        let ctx = c.getContext("2d");
-
         ctx.fillStyle = "rgba(255, 255, 255, 0.125)";
 
         ctx.beginPath();
-        ctx.ellipse(originX, originY, bigR, bigR, 0, 0, 2 * Math.PI);
+        ctx.ellipse(originX, originY, stitchSize(), stitchSize(), 0, 0, 2 * Math.PI);
         ctx.stroke();
 
 
@@ -523,33 +537,91 @@ $(document).ready(function () {
         // color 1 always rendered
         // color 2 always rendered
 
+        let nbrColorElement = $('#nbrColors')[0];
+
         if (nbrColorElement.value < 3) {
+            $('#color2').addClass('isHidden');
+            $('#color2label').addClass('isHidden');
             $('#color3').addClass('isHidden');
             $('#color3label').addClass('isHidden');
-            $('#color4').addClass('isHidden');
-            $('#color4label').addClass('isHidden');
         } else if (nbrColorElement.value < 4) {
-            $('#color3').removeClass('isHidden');
-            $('#color3label').removeClass('isHidden');
-            $('#color4').addClass('isHidden');
-            $('#color4label').addClass('isHidden');
+            $('#color2').removeClass('isHidden');
+            $('#color2label').removeClass('isHidden');
+            $('#color3').addClass('isHidden');
+            $('#color3label').addClass('isHidden');
         } else {
+            $('#color2').removeClass('isHidden');
+            $('#color2label').removeClass('isHidden');
             $('#color3').removeClass('isHidden');
             $('#color3label').removeClass('isHidden');
-            $('#color4').removeClass('isHidden');
-            $('#color4label').removeClass('isHidden');
         }
 
     }
 
     function sendRoundInfoAlert(textMsg) {
         var errorDiv = document.getElementById('errorDiv');
-        console.log('found canvas div ' + errorDiv);
         sendInfoAlert(textMsg, errorDiv);
+    }
+
+
+
+
+
+    function saveNow() {
+        console.log('inside saveNow');
+        // only save the stitches that have changed from default
+        var ssTemp = [];
+        stitches.forEach(stitch => {
+            if (stitch.isDropDown) {
+                ssTemp.push(stitch.id);
+                localStorage.setItem('sts', JSON.stringify(ssTemp));
+                console.log("found stitch:" + stitch.id + "pushsed: " + ssTemp);
+            }
+        })
+        //const stitchesJson = JSON.stringify(shortStitches);
+
+                
+
+        axios.post('/savePattern', {
+            dd: shortStitches(),
+            bq: baseStitchQty(),
+            sz: stitchSize(),
+            ca: colorsArray()
+        })
+        .then(function (response) {
+            console.log(response);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
     }
 }); //document ready
 
+function initializeLocalStorage() {
+    if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
+    if (!localStorage.getItem("sz")) localStorage.setItem("sz",10);
+    let defaultColors = ["#9b4f3f","#FFFFFF","#D4AF37"];
+    if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
+    if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
+}
 
+// easier access to local variables
+function colorsArray() {
+    return JSON.parse(localStorage.getItem('ca'));
+}
+function nbrColors() {
+    return colorsArray().length;
+}
+function baseStitchQty() {
+    return localStorage.getItem('bq');
+}
+function stitchSize() {
+    return localStorage.getItem('sz');
+}
+function shortStitches() {
+    return JSON.parse(localStorage.getItem('sts'));
+}
 
 /// needs to be moved to a shared file
 function sendInfoAlert(textMsg, toDiv) {
@@ -565,13 +637,6 @@ function sendInfoAlert(textMsg, toDiv) {
     alertDiv.appendChild(textNode);
     alertDiv.appendChild(alertImg);
 
-    console.log(alertDiv);
-    console.log(toDiv);
-
     toDiv.appendChild(alertDiv);
 }
-
-
-
-
 

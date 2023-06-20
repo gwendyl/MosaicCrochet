@@ -80,7 +80,6 @@ exports.login = async (req, res) => {
             // create session
             req.session.authenticated = true;
             req.session.user = email;
-            //res.json(req.session);
 
             this.renderContent(req, res, "");
 
@@ -291,11 +290,12 @@ exports.sendResetLink = async (req, res) => {
     return;
 }
 
-exports.authorized = (req, res) => {
+exports.authorized = (req) => {
+    console.log(req.session);
     if(req.session.authenticated) {
-        patterns.renderRound(req,res,true);
+        return true;
     } else {
-        this.renderLogin(res, "");
+        return false;
     }
         
   }
@@ -313,8 +313,14 @@ exports.logout = (req, res) => {
 exports.renderHome = (res, usermsg) => {
     res.render("home", {userMsg: usermsg, is_auth: false});
 }
-exports.renderContent = (req, res) => {
-    this.authorized(req, res);
+exports.renderContent = (req, res, usermsg) => {
+    if(this.authorized(req)) {
+        console.log('authorized')
+        res.render("content", {userMsg: usermsg, is_auth: true})
+    } else {
+        console.log('not authorized');
+        res.redirect('/');
+    };
 }
 exports.renderLogin = (res, usermsg) => {
     res.render("login", {userMsg: usermsg, is_auth: false});

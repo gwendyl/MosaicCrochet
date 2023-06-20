@@ -3,7 +3,9 @@
  https://colorhunt.co/palette/579bb1e1d7c6ece8ddf8f4ea 
  *********************************************************/
 
-
+.isHidden {
+  visibility: hidden;
+}
 .round-corners {
   border-radius: 50%;
 }

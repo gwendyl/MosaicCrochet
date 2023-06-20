@@ -4,8 +4,6 @@ const express = require('express')
     , ejs = require('ejs')
 ;
 
-//const session = require('express-session');
-
 const users = require('./controllers/users');
 const patterns = require('./controllers/patterns');
 
@@ -19,7 +17,7 @@ app.use(express.json({ limit: '300kb' }));
 app.use(
     session({
         secret: process.env.SESSIONSECRET,
-        cookie: { maxAge: 30000 },
+        cookie: { maxAge: 10 * 60 * 1000 },
         resave: true,
         saveUninitialized: false,  // critical
     })
@@ -70,10 +68,17 @@ app.post("/resetlink", async function(req, res) {users.sendResetLink(req, res);}
 
 app.get("/logout", function (req, res) {users.logout(req, res);});
 
-app.get("/content", function (req, res) {patterns.renderRound(req,res)});
-app.post("/roundSettings", function(req,res) {patterns.renderRound(req,res)});
+app.get("/content", function (req, res) {users.renderContent(req,res, "")});
+
+app.get("/round", function (req, res)  {patterns.renderRound(req,res)});
+// no need to hit the server and go back
+// app.post("/roundSettings", function(req,res) {
+//     console.log('renderRound');
+//     patterns.renderRound(req,res)
+// });
 
 app.post("/savePattern",   function(req,res) {
     console.log('app.js received savePattern post');
     console.log(req.body);
+    patterns.saveCurrentPattern(req,res,"");
 });
