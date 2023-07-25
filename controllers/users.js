@@ -291,7 +291,7 @@ exports.sendResetLink = async (req, res) => {
 }
 
 exports.authorized = (req) => {
-    console.log(req.session);
+    // console.log(req.session);
     if(req.session.authenticated) {
         return true;
     } else {
@@ -322,6 +322,18 @@ exports.renderContent = (req, res, usermsg) => {
         res.redirect('/');
     };
 }
+
+// exports.renderPatternList = (req, res, usermsg) => {
+//     console.log("reslist: " + res.list);
+//     if(this.authorized(req)) {
+//         console.log('authorized')
+//         res.render("patternList", {userMsg: usermsg, is_auth: true})
+//     } else {
+//         console.log('not authorized');
+//         res.redirect('/');
+//     };
+// }
+
 exports.renderLogin = (res, usermsg) => {
     res.render("login", {userMsg: usermsg, is_auth: false});
 }

@@ -1,7 +1,9 @@
 require('dotenv').config()
+
 const express = require('express')
     , session = require('express-session')
     , ejs = require('ejs')
+    , url = require('url')
 ;
 
 const users = require('./controllers/users');
@@ -70,6 +72,19 @@ app.get("/logout", function (req, res) {users.logout(req, res);});
 
 app.get("/content", function (req, res) {users.renderContent(req,res, "")});
 
+app.get("/login", function (req, res) {users.renderLogin(res,"")});
+app.get("/patternlist", function (req, res) {
+
+    
+    // var list = patterns.patternList(req);
+    // console.log(list);
+    // //res.send(list);
+
+    // users.renderPatternList(req,res, "")
+    patterns.renderPatternList(req, res);
+});
+
+
 app.get("/round", function (req, res)  {patterns.renderRound(req,res)});
 // no need to hit the server and go back
 // app.post("/roundSettings", function(req,res) {
@@ -77,8 +92,18 @@ app.get("/round", function (req, res)  {patterns.renderRound(req,res)});
 //     patterns.renderRound(req,res)
 // });
 
+
 app.post("/savePattern",   function(req,res) {
-    console.log('app.js received savePattern post');
-    console.log(req.body);
     patterns.saveCurrentPattern(req,res,"");
 });
+
+app.post("/deletePattern", function(req,res) {
+    patterns.deletePattern(req, res,"");
+}
+);
+app.get("/openPattern", function(req,res) {
+    const patternId = url.parse(req.url, true).query.id;
+    console.log('opening pattern ' + patternId);
+    patterns.openPattern(req, res, "", patternId);
+}
+);

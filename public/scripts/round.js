@@ -1,19 +1,24 @@
-
+console.log("insider round.js");
 $(document).ready(function () {
 
     //////////////////////////////////////////////////////
     // if local storeage not initiated, default them
     //////////////////////////////////////////////////////
     initializeLocalStorage();
-        
+
     // set the form fields
+    $('#patternName').text(patternName());
+
     $('#nbrColors').val(nbrColors());
     $('#baseStitches').val(baseStitchQty());
     $('#stitchSize').val(stitchSize());
-    $('#color0').val(colorsArray()[0]);
-    $('#color1').val(colorsArray()[1]);
-    $('#color2').val(colorsArray()[2]);
-    $('#color3').val(colorsArray()[3]);
+    console.log('colors array at top of round.js')
+    console.log(colorsArrayWithHash());
+    $('#color0').val(colorsArrayWithHash()[0]);
+    $('#color1').val(colorsArrayWithHash()[1]);
+    $('#color2').val(colorsArrayWithHash()[2]);
+    $('#color3').val(colorsArrayWithHash()[3]);
+
 
     // hard to drop down onto first circle or two
     let startRound = 3;  // cant land on rounds 0 or 1
@@ -68,7 +73,27 @@ $(document).ready(function () {
         })
     });
 
+    let nameField = document.getElementById('patternNameInput');
+    nameField.addEventListener("change", function() {
+        console.log('name changed to ' + nameField.value);
+        localStorage.setItem('t', nameField.value);
+        $('#patternName').text(patternName());
+        $('#patternNameInput').addClass("isHidden");
+        $('#patternNameLabel').addClass("isHidden");
+        saveNow();
+    });
     
+    let renameButton = document.getElementById('rename');
+    renameButton.addEventListener("click", function() {
+        $('#patternNameInput').removeClass("isHidden");
+        $('#patternNameLabel').removeClass("isHidden");
+    });
+
+    let manageButton = document.getElementById('mgPatterns');
+    manageButton.addEventListener("click", function() {
+        location.href = "/patternlist";
+    });
+
     let goButton = document.getElementById('goButton');
     goButton.addEventListener("click", function() {
 
@@ -77,10 +102,12 @@ $(document).ready(function () {
         localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
         let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
         let colors = [];
-        colors.push($('#color0').val());
-        colors.push($('#color1').val());
-        if (nbrColors > 2) colors.push($('#color2').val());
-        if (nbrColors > 3) colors.push($('#color3').val());
+        // JSON can't work with # signs, so store only the values
+        
+        colors.push($('#color0').val().slice(1));
+        colors.push($('#color1').val().slice(1));
+        if (nbrColors > 2) colors.push($('#color2').val().slice(1));
+        if (nbrColors > 3) colors.push($('#color3').val().slice(1));
  
         localStorage.setItem('ca', JSON.stringify(colors));        
 
@@ -268,27 +295,6 @@ $(document).ready(function () {
         return baseColorId;
     }
 
-    // function saveLocally() {
-    //     window.localStorage.setItem("bq", baseStitchQty);
-    //     window.localStorage.setItem("ca", JSON.stringify(colors));
-    //     window.localStorage.setItem("sz", bigR);
-    //     // if there are problems with initial stitchhes not getting stored properly, check the timing of this
-    //     // I am concerned that this setItem is firing before the above logic has completed.
-    //     shortStitches = [];
-    //     stitches.forEach(stitch => {
-    //         if (stitch.isDropDown) {
-    //             shortStitches.push(stitch.id);
-    //         }
-    //     })
-    //     window.localStorage.setItem("sts", JSON.stringify(shortStitches));
-
-    //     window.console.log('-- end of save locally--');
-    //     window.console.log(localStorage.getItem("bq"));
-    //     window.console.log(JSON.parse(localStorage.getItem("ca")));
-    //     window.console.log(localStorage.getItem("sz"));
-    //     window.console.log(JSON.parse(localStorage.getItem("sts")));
-    // }
-
     function drawAllStitches() {
         console.log(stitches.length);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -296,13 +302,13 @@ $(document).ready(function () {
         
         stitches.forEach(stitch => {
             // draw a little oval behind the stitch to indicate the base color of that round
-            ctx.fillStyle = colorsArray()[getBaseColorId(stitch.roundId)];
+            ctx.fillStyle = colorsArrayWithHash()[getBaseColorId(stitch.roundId)];
             ctx.beginPath();
             ctx.ellipse(stitch.x, stitch.y, stitch.radiusY, stitch.radiusX / 2, stitch.theta, stitch.startAngle, stitch.endAngle);
             ctx.stroke();
             ctx.fill();
 
-            ctx.fillStyle = colorsArray()[stitch.currColorId];
+            ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
 
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -343,7 +349,7 @@ $(document).ready(function () {
 
         })
 
-        saveNow();
+        //saveNow();
     }
 
 
@@ -574,19 +580,25 @@ $(document).ready(function () {
         stitches.forEach(stitch => {
             if (stitch.isDropDown) {
                 ssTemp.push(stitch.id);
+                console.log('stitches array')
+                console.log (ssTemp);
                 localStorage.setItem('sts', JSON.stringify(ssTemp));
-                console.log("found stitch:" + stitch.id + "pushsed: " + ssTemp);
             }
         })
         //const stitchesJson = JSON.stringify(shortStitches);
 
                 
 
+        console.log('savenow posting sts and ca as');
+        console.log(shortStitches());
+        console.log(colorsArrayNoHash());
         axios.post('/savePattern', {
-            dd: shortStitches(),
+            dd: localStorage.getItem('sts'),
             bq: baseStitchQty(),
             sz: stitchSize(),
-            ca: colorsArray()
+            ca: localStorage.getItem('ca'),
+            t:  patternName(),
+            id: localStorage.getItem('id')
         })
         .then(function (response) {
             console.log(response);
@@ -599,22 +611,53 @@ $(document).ready(function () {
 }); //document ready
 
 function initializeLocalStorage() {
+    console.log('initializing local storeage');
+    // first check to see if we were passed a pattern
+    console.log('checking for filled in hidden fields');
+    console.log($('#opBaseStitches').length);
+    localStorage.clear();
+    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
+    if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
+    if ($('#opDdStitches').length > 0) localStorage.setItem('sts', $('#opDdStitches').val());
+    if ($('#opColors').length > 0) localStorage.setItem('ca', $('#opColors').val());
+    if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
+    if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
+
+    // if we had a pattern, then
+    if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
+
+    if (!localStorage.getItem("t")) localStorage.setItem("t","Draft Pattern");
     if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
     if (!localStorage.getItem("sz")) localStorage.setItem("sz",10);
-    let defaultColors = ["#9b4f3f","#FFFFFF","#D4AF37"];
+    let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
     if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
     if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
+    console.log(localStorage.getItem("ca"));
+    console.log('done initializeing local storeage');
 }
 
 // easier access to local variables
-function colorsArray() {
+function colorsArrayNoHash() {
     return JSON.parse(localStorage.getItem('ca'));
 }
+function colorsArrayWithHash() {
+    let initialArray = JSON.parse(localStorage.getItem('ca'));
+    var finalArray = [];
+    for(i=0; i< initialArray.length; i++) {
+        finalArray.push('#'+initialArray[i]);
+    }
+    return finalArray;
+}
+
+
 function nbrColors() {
-    return colorsArray().length;
+    return colorsArrayWithHash().length;
 }
 function baseStitchQty() {
     return localStorage.getItem('bq');
+}
+function patternName() {
+    return localStorage.getItem('t');
 }
 function stitchSize() {
     return localStorage.getItem('sz');
@@ -639,4 +682,3 @@ function sendInfoAlert(textMsg, toDiv) {
 
     toDiv.appendChild(alertDiv);
 }
-

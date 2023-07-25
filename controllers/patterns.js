@@ -13,8 +13,9 @@ const patternSchema = new mongoose.Schema(
         patternName: String,
         baseStitchCount: Number,
         stitchSize: Number,
-        colors: Array,
-        ddStitches: Array,
+        colors: String,
+        ddStitches: String,
+        pattern: String
     },
     {
         timestamps: true,
@@ -28,20 +29,39 @@ const patternSchema = new mongoose.Schema(
 /////////////////////////////
 //
 /////////////////////////////
+exports.renderPatternList = async  (req, res, userMsg) => {
+    if (!req.session.user) {
+        console.log('not authorized - renderPatternList');
+        return;
+    }
+
+    var resultSet = await Pattern.find({userEmail: req.session.user});
+    var list = []
+    resultSet.forEach(pattern => {
+         list.push(pattern);        
+    })    
+
+    console.log('inside renderpatternlist about to actually render');
+    res.render("patternlist", {userMsg:userMsg, is_auth: true, list:list})    
+
+}
+
 exports.saveCurrentPattern = async (req, res, usermsg) => {
 
     console.log('saving pattern for ' + req.session.user);
-    const foundPattern = await Pattern.findOne({userEmail: req.session.user});
+    var foundPattern = await Pattern.findOne({userEmail: req.session.user, _id: req.body.id});
     if(foundPattern) {
         console.log('user already has a pattern');
         console.log(req.body);
         try {
-            await Pattern.updateOne({userEmail:req.session.user}, 
+            console.log('attempting update');
+            await Pattern.updateOne({userEmail:req.session.user, _id:req.body.id}, 
                 {
                     baseStitchCount: req.body.bq,
                     stitchSize: req.body.sz,
                     colors: req.body.ca,
-                    ddStitches: req.body.dd
+                    ddStitches: req.body.dd,
+                    pattern: req.body.t
                 });
         } catch (error) {
             console.log(error);
@@ -50,22 +70,49 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
     } else {
         try {
 
-            await new Pattern({
-            userEmail: req.session.user,
-            baseStitchCount: req.body.bq,
-            stitchSize: req.body.sz,
-            colors: req.body.ca,
-            ddStitches: req.body.dd,
-            createdAt: Date.now(),
+            console.log('attempting insert');
+            foundPattern = await new Pattern({
+                userEmail: req.session.user,
+                baseStitchCount: req.body.bq,
+                stitchSize: req.body.sz,
+                colors: req.body.ca,
+                ddStitches: req.body.dd,
+                pattern: req.body.t,
+                createdAt: Date.now(),
             }).save();
-        
             // establish session - I don't know if this is working yet
         } catch (error) {
             console.console.log(error);
         }
         
     } 
+    this.openPattern(req, res, "", foundPattern._id);
+ }
 
+ exports.deletePattern = async (req, res, usermsg) => {
+
+    console.log('deleting pattern ' + req.body._id);
+    const foundPattern = await Pattern.deleteOne({userEmail: req.session.user, _id: req.body._id});
+    if(foundPattern) {
+        console.log('successfully deleted');
+        console.log(req.body);
+    } else {
+        console.log('no such pattern exists');
+    } 
+
+ }
+
+ exports.openPattern = async (req, res, usermsg, patternId) => {
+
+    console.log('opening pattern ' + patternId + ' for ' + req.session.user);
+ 
+    const foundPattern = await Pattern.findOne({userEmail: req.session.user, _id: patternId});
+    if(!foundPattern) {
+        this.renderPatternList(req, res, "Error - No Matching Pattern Found");
+    }
+    console.log('found pattern:');
+    console.log(foundPattern);
+    this.renderRound(req,res,foundPattern);
  }
 
 
@@ -73,26 +120,13 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
 // render functions
 //////////////////////////////
 
-exports.renderRound = (req, res) => {
+exports.renderRound = (req, res, pattern) => {
     if (!users.authorized(req)) {
         res.redirect('/');
         return;
     }
-
-    
-    // const roundCriteria = {
-    //     nbrColors:       ((req.body.nbrColors>0)     ? req.body.nbrColors    : 3),
-    //     baseStitchCount: ((req.body.baseStitches>0)  ? req.body.baseStitches : 6),
-    //     stitchSize:      ((req.body.stitchSize>0)    ? req.body.stitchSize   : 10),
-    //     colors: [        ((req.body.color0>"")       ? req.body.color0       : "#9b4f3f"), 
-    //                      ((req.body.color1>"")       ? req.body.color1       : "#FFFFFF"), 
-    //                      ((req.body.color2>"")       ? req.body.color2       : "#D4AF37"),
-    //                      ((req.body.color3>"")       ? req.body.color3       : "#281E5D")
-    //             ]
-    // };
-
-    //res.render("round", {userMsg: "", is_auth: true, criteria: roundCriteria, req: req});
-    res.render("round", {userMsg: "", is_auth: true, req: req});
+    console.log('res.render called with pattern as argument');
+    console.log(pattern);
+    res.render("round", {userMsg: "", is_auth: true, req: req, pattern:pattern});
 }
-
         

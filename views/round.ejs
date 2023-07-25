@@ -6,8 +6,8 @@
 
 <main class="form-signin w-100 m-auto">
     <div class="jumbotron">
-        <h1>In the Round</h1>
-        <div class="container">
+        <h1>In the Round</h1>            
+            <div class="container">
             <!-- Content here -->
             This is a mosaic-crochet pattern visualization tool.  It is intended for intermediate to advanced crochet artists that are familiar with basic mosaic crochet techniques.  Links to instructional videos can be found on the <a class="nav-link" href="/resources">resources</a> page of this website.
             <ul>
@@ -15,29 +15,38 @@
                 <li>Starting stitch is outlined with bold border</li>
                 <li>when two stitches meet at same drop-down location, choose the stitch that looks the best</li>
             </ul>
-    </div>
+        </div>
+        <div class="container">
+            <h1 id="patternName"></h1>
+            <button class="btn-secondary" name = "rename" id = "rename">Rename Pattern</button>
+            <button class="btn-secondary" name = "mgPatterns" id = "mgPatterns">Manage Patterns</button>
+            <input class="isHidden" type="text" name="patternNameInput" id="patternNameInput" required>
+            <label class="isHidden" id="patternNameLabel" for="patternNameInput">Pattern Name</label><br>
+        </div>
         <!-- <form action="roundSettings" method="post"> -->
-            <div class="form-floating">
-                <input type="number" name = "nbrColors" id="nbrColors" required autofocus min="2" max="4">
-                <label for="nbrColors">Number of Colors</label>
-                <br>
-                <input type="number" name = "baseStitches" id="baseStitches" required autofocus min="6" max="10" >
-                <label for="baseStitches">Stitches in Round 1</label>
-                <br>
-                <input type="number" name = "stitchSize" id="stitchSize" required autofocus min="6" max="20">
-                <label for="stitchSize">Stitch Size</label>
-                <label for="color0" class="form-label" id="color0label">Color picker</label>
-                <input type="color" class="form-control form-control-color" name = "color0" id="color0" title="Choose your first color">
-                <label for="color1" class="form-label" id="color1label">Color picker</label>
-                <input type="color" class="form-control form-control-color" name = "color1" id="color1" title="Choose your first color">
+        <div class="form-floating">
+            <!-- <input type="text" name="patternName" id="patternName" required>
+            <label for="patternName">Pattern Name</label><br> -->
+            <input type="number" name = "nbrColors" id="nbrColors" required autofocus min="2" max="4">
+            <label for="nbrColors">Number of Colors</label>
+            <br>
+            <input type="number" name = "baseStitches" id="baseStitches" required autofocus min="6" max="10" >
+            <label for="baseStitches">Stitches in Round 1</label>
+            <br>
+            <input type="number" name = "stitchSize" id="stitchSize" required autofocus min="6" max="20">
+            <label for="stitchSize">Stitch Size</label>
+            <label for="color0" class="form-label" id="color0label">Color picker</label>
+            <input type="color" class="form-control form-control-color" name = "color0" id="color0" title="Choose your first color">
+            <label for="color1" class="form-label" id="color1label">Color picker</label>
+            <input type="color" class="form-control form-control-color" name = "color1" id="color1" title="Choose your first color">
 
-                    <label for="color2" class="form-label" id="color2label">Color picker</label>
-                    <input type="color" class="form-control form-control-color" name = "color2" id="color2" title="Choose your first color">
-                    <label for="color3" class="form-label" id="color3label">Color picker</label>
-                    <input type="color" class="form-control form-control-color" name = "color3" id="color3" title="Choose your first color">
-                <br>
-            </div>
-            <button class="btn-primary" name = "go" id = "goButton">Go</button>
+                <label for="color2" class="form-label" id="color2label">Color picker</label>
+                <input type="color" class="form-control form-control-color" name = "color2" id="color2" title="Choose your first color">
+                <label for="color3" class="form-label" id="color3label">Color picker</label>
+                <input type="color" class="form-control form-control-color" name = "color3" id="color3" title="Choose your first color">
+            <button class="btn-secondary" name = "go" id = "goButton">Reset Chart</button>
+        </div>
+            
         <!-- </form> -->
         <div id="errorDiv">
         </div>
@@ -65,5 +74,16 @@
 
 
     </div>
+    <% if (pattern) { %>
+        <div class="alert alert-warning" role="alert">
+            <input type="number" name = "opBaseStitches" id="opBaseStitches" value="<%= pattern.baseStitchCount %>" >
+            <input type="text" name = "opId" id="opId" value="<%= pattern._id %>" >
+            <input type="number" name = "opStitchSize" id="opStitchSize" value="<%= pattern.stitchSize %>" >
+            <input type="text" name = "opDdStitches" id="opDdStitches" value="<%= pattern.ddStitches %>" >
+            <input type="text" name = "opColors" id="opColors" value="<%= pattern.colors %>" >
+            <input type="text" name = "opName" id="opName" value="<%= pattern.pattern %>" >
+
+        </div>
+    <% } %>
 </main>
 <%- include('partials/footer'); %>

@@ -9,3 +9,7 @@
 .round-corners {
   border-radius: 50%;
 }
+
+.imageIcon {
+  width: 20px;
+}

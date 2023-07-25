@@ -1,0 +1,23 @@
+<%- include('partials/header') %>
+<script type="text/javascript" src="scripts/patternlist.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+
+<main>
+    <div class="list-group">
+        <ul>
+          <% list.forEach(function(pattern){ %>
+            <div class="container align-middle">
+              <div class="row">
+                <div class="col-sm-10">
+                  <a id="link<%= pattern._id %>" href="/openPattern?id=<%= pattern._id %>" class="patternlink list-group-item list-group-item-action"><%= pattern.pattern %></a>
+                </div>
+                <div class="col-sm align-middle">
+                  <button id="delete<%= pattern._id %>" class="delete btn btn-outline-secondary btn-sm"><img src="images/trash.svg" class="imageIcon rounded float-right"></button>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        </ul>
+    </div>
+</main>
+<%- include('partials/footer'); %>
