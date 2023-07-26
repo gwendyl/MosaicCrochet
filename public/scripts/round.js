@@ -1,4 +1,3 @@
-console.log("insider round.js");
 $(document).ready(function () {
 
     //////////////////////////////////////////////////////
@@ -12,8 +11,6 @@ $(document).ready(function () {
     $('#nbrColors').val(nbrColors());
     $('#baseStitches').val(baseStitchQty());
     $('#stitchSize').val(stitchSize());
-    console.log('colors array at top of round.js')
-    console.log(colorsArrayWithHash());
     $('#color0').val(colorsArrayWithHash()[0]);
     $('#color1').val(colorsArrayWithHash()[1]);
     $('#color2').val(colorsArrayWithHash()[2]);
@@ -28,8 +25,6 @@ $(document).ready(function () {
     let canvas = $('#myCanvas')[0];
     let ctx = canvas.getContext("2d");
 
-    originX = canvas.width / 2;
-    originY = canvas.height / 2;
     let radiusX = stitchSize() * .6;
     let radiusY = stitchSize();
 
@@ -73,9 +68,12 @@ $(document).ready(function () {
         })
     });
 
+    window.addEventListener('resize', (e) => {
+        console.log('window resized');
+    });
+
     let nameField = document.getElementById('patternNameInput');
     nameField.addEventListener("change", function() {
-        console.log('name changed to ' + nameField.value);
         localStorage.setItem('t', nameField.value);
         $('#patternName').text(patternName());
         $('#patternNameInput').addClass("isHidden");
@@ -88,12 +86,7 @@ $(document).ready(function () {
         $('#patternNameInput').removeClass("isHidden");
         $('#patternNameLabel').removeClass("isHidden");
     });
-
-    let manageButton = document.getElementById('mgPatterns');
-    manageButton.addEventListener("click", function() {
-        location.href = "/patternlist";
-    });
-
+    
     let goButton = document.getElementById('goButton');
     goButton.addEventListener("click", function() {
 
@@ -177,11 +170,15 @@ $(document).ready(function () {
         })
     }
     function constructStitches() {
+
+        originX = canvas.getBoundingClientRect().width / 2;
+        originY = canvas.getBoundingClientRect().height / 2;    
+
+        console.log('constructing stitches based upon canvas width and height of ' + canvas.getBoundingClientRect().width + ', ' + canvas.getBoundingClientRect().height);
+        console.log('therefore origin is at ' + originX + ', ' + originY);
         let ss = [];
 
         // constant for all stitches
-        let startAngle = 0;
-        let endAngle = 2 * Math.PI;
         let startingX = originX;
         let id = 0;
         let currColorId = 0;
@@ -200,15 +197,12 @@ $(document).ready(function () {
             let theta = (2 * Math.PI / currentRound.stitchCount);
             let startingY = originY + 2 * radiusY * (j + 1);
             for (let i = 0; i < currentRound.stitchCount; i++) {
-                // coordinates of the center of the ellipse
-                // so rotating around a circle that has a radius of (bigR + radiusY)
-                //newXCoord = originX + i*(bigR+radiusY)*Math.(theta);
-                //newYCoord = originY + 2*radiusY + i*(bigR+radiusY)*Math.cos(theta);
 
+                // let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
+                // let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
 
-
-                let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
-                let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
+                let newX = 0 - Math.sin(i * theta) * (startingY - originY) + originX;
+                let newY = Math.cos(i * theta) * (startingY - originY) + originY;
 
 
                 // determine the lower stitch that it will build upon
@@ -233,23 +227,18 @@ $(document).ready(function () {
                 // reconstruct relevant information from saved shortStitches
                 let stitchColorId = currColorId;
                 let isDropDown = false;
-                // if ( shortStitches.length >0) {
-                //     if (stitchColorId != shortStitches[id].cid) {
-                //         stitchColorId = shortStitches[id].cid;
-                //         isDropDown = (shortStitches[id].dd==1) ? true : false;
-                //     }
-                // }
-                // if(shortStitches.length>0){
-                //     if (stitchColorId != shortStitches[id].currColorId) stitchColorId = shortStitches[id].currColorId;                }
-                // }
+      
+                if(id==0) {
+                    console.log('placing first stitch at ' + newX + '. ' + newY);
+                }
                 stitches.push({
                     x: newX,
                     y: newY,
-                    radiusX: radiusX,
-                    radiusY: radiusY,
+                    // radiusX: radiusX,
+                    // radiusY: radiusY,
                     theta: theta * i,
-                    startAngle: startAngle,
-                    endAngle: endAngle,
+                    // startAngle: startAngle,
+                    // endAngle: endAngle,
                     id: id,  //save
                     currColorId: stitchColorId,
                     roundId: j,
@@ -270,7 +259,6 @@ $(document).ready(function () {
     }
 
     function reconstructFromLocal(){
-        console.log('reconstcutfrom local');
         shortStitches().forEach(stitch => {
             attemptDropDown(stitches[stitch]);
         })
@@ -296,15 +284,19 @@ $(document).ready(function () {
     }
 
     function drawAllStitches() {
-        console.log(stitches.length);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
         
+        // constant for all stitches
+        let startAngle = 0;
+        let endAngle = 2 * Math.PI;
+
+                
         stitches.forEach(stitch => {
             // draw a little oval behind the stitch to indicate the base color of that round
             ctx.fillStyle = colorsArrayWithHash()[getBaseColorId(stitch.roundId)];
             ctx.beginPath();
-            ctx.ellipse(stitch.x, stitch.y, stitch.radiusY, stitch.radiusX / 2, stitch.theta, stitch.startAngle, stitch.endAngle);
+            ctx.ellipse(stitch.x, stitch.y, radiusY, radiusX / 2, stitch.theta, startAngle, endAngle);
             ctx.stroke();
             ctx.fill();
 
@@ -318,7 +310,7 @@ $(document).ready(function () {
 
             // x and y parameters describe the middle of the ellipse
             ctx.beginPath();
-            ctx.ellipse(stitch.x, stitch.y, stitch.radiusX, stitch.radiusY, stitch.theta, stitch.startAngle, stitch.endAngle);
+            ctx.ellipse(stitch.x, stitch.y, radiusX, radiusY, stitch.theta, startAngle, endAngle);
             ctx.stroke();
             ctx.fill();
 
@@ -368,6 +360,9 @@ $(document).ready(function () {
     };
 
     function drawStartingCircle() {
+        originX = canvas.width / 2;
+        originY = canvas.height / 2;    
+
         ctx.fillStyle = "rgba(255, 255, 255, 0.125)";
 
         ctx.beginPath();
@@ -378,8 +373,10 @@ $(document).ready(function () {
     }
 
     function isIntersect(point, stitch) {
-        if (Math.pow(point.x - stitch.x, 2) / Math.pow(stitch.radiusX, 2) + Math.pow(point.y - stitch.y, 2) / Math.pow(stitch.radiusY, 2) < 1)
+        if (Math.pow(point.x - stitch.x, 2) / Math.pow(radiusX, 2) + Math.pow(point.y - stitch.y, 2) / Math.pow(radiusY, 2) < 1) {
+            console.log('point ' + point.x + ' ' + point.y + ' is between ' + stitch.x + ' ' + stitch.y);
             return true;
+        }
         else
             return false;
     }
@@ -447,7 +444,10 @@ $(document).ready(function () {
     }
 
     function toCanvasCoords(pageX, pageY, scale) {
+        console.log('toCanvasCoords called with X and Y of ' + pageX + ' ' + pageY)
         let rect = canvas.getBoundingClientRect();
+        console.log('canvas.getBoundingClientRect returned ')
+        console.log(rect);
         pos = {
             x: (pageX - rect.left) / scale,
             y: (pageY - rect.top) / scale
@@ -574,14 +574,11 @@ $(document).ready(function () {
 
 
     function saveNow() {
-        console.log('inside saveNow');
         // only save the stitches that have changed from default
         var ssTemp = [];
         stitches.forEach(stitch => {
             if (stitch.isDropDown) {
                 ssTemp.push(stitch.id);
-                console.log('stitches array')
-                console.log (ssTemp);
                 localStorage.setItem('sts', JSON.stringify(ssTemp));
             }
         })
@@ -589,9 +586,6 @@ $(document).ready(function () {
 
                 
 
-        console.log('savenow posting sts and ca as');
-        console.log(shortStitches());
-        console.log(colorsArrayNoHash());
         axios.post('/savePattern', {
             dd: localStorage.getItem('sts'),
             bq: baseStitchQty(),
@@ -611,10 +605,7 @@ $(document).ready(function () {
 }); //document ready
 
 function initializeLocalStorage() {
-    console.log('initializing local storeage');
     // first check to see if we were passed a pattern
-    console.log('checking for filled in hidden fields');
-    console.log($('#opBaseStitches').length);
     localStorage.clear();
     if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
     if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
@@ -632,8 +623,6 @@ function initializeLocalStorage() {
     let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
     if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
     if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
-    console.log(localStorage.getItem("ca"));
-    console.log('done initializeing local storeage');
 }
 
 // easier access to local variables

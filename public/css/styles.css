@@ -13,3 +13,12 @@
 .imageIcon {
   width: 20px;
 }
+.container {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+}
