@@ -3,21 +3,31 @@
 <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
 
 <main>
-    <div class="list-group">
-        <ul>
-          <% list.forEach(function(pattern){ %>
-            <div class="container align-middle">
-              <div class="row">
-                <div class="col-sm-10">
-                  <a id="link<%= pattern._id %>" href="/openPattern?id=<%= pattern._id %>" class="patternlink list-group-item list-group-item-action"><%= pattern.pattern %></a>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12 col-md-2 col-xl-2 bd-sidebar leftBorderContainer">
+        <img class = "img-fluid imageContain" src="images/arrow.jpg">
+      </div>
+      <div class="col">
+        <h1>Saved Patterns</h1>            
+        <div class="list-group">
+            <ul>
+              <% list.forEach(function(pattern){ %>
+                <div class="container align-middle">
+                  <div class="row">
+                    <div class="col-sm-10">
+                      <a id="link<%= pattern._id %>" href="/openPattern?id=<%= pattern._id %>" class="patternlink list-group-item list-group-item-action"><%= pattern.pattern %></a>
+                    </div>
+                    <div class="col-sm align-middle">
+                      <button id="delete<%= pattern._id %>" class="delete btn btn-outline-secondary btn-sm"><img src="images/trash.svg" class="imageIcon rounded float-right"></button>
+                    </div>
+                  </div>
                 </div>
-                <div class="col-sm align-middle">
-                  <button id="delete<%= pattern._id %>" class="delete btn btn-outline-secondary btn-sm"><img src="images/trash.svg" class="imageIcon rounded float-right"></button>
-                </div>
-              </div>
-            </div>
-          <% }); %>
-        </ul>
+              <% }); %>
+            </ul>
+        </div>
+      </div>
     </div>
+  </div>
 </main>
 <%- include('partials/footer'); %>

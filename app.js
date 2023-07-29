@@ -43,6 +43,8 @@ process.on("unhandledRejection", err => {
 /////////////////////////////////
 //app.get("/", function (req, res) {users.renderContent(req, res)});
 app.get("/", function (req, res) { users.renderHome(res,"")});
+app.get("/about", function (req, res) { users.renderAbout(res,"")});
+app.get("/resources", function (req, res) { users.renderResources(res,"")});
 
 app.get("/login", function (req, res) {users.renderLogin(res,"")});
 app.post("/login", async function (req, res) {users.login(req,res);});
@@ -75,22 +77,12 @@ app.get("/content", function (req, res) {users.renderContent(req,res, "")});
 app.get("/login", function (req, res) {users.renderLogin(res,"")});
 app.get("/patternlist", function (req, res) {
 
-    
-    // var list = patterns.patternList(req);
-    // console.log(list);
-    // //res.send(list);
-
-    // users.renderPatternList(req,res, "")
     patterns.renderPatternList(req, res);
 });
 
 
 app.get("/round", function (req, res)  {patterns.renderRound(req,res)});
-// no need to hit the server and go back
-// app.post("/roundSettings", function(req,res) {
-//     console.log('renderRound');
-//     patterns.renderRound(req,res)
-// });
+
 
 
 app.post("/savePattern",   function(req,res) {
@@ -103,7 +95,6 @@ app.post("/deletePattern", function(req,res) {
 );
 app.get("/openPattern", function(req,res) {
     const patternId = url.parse(req.url, true).query.id;
-    console.log('opening pattern ' + patternId);
     patterns.openPattern(req, res, "", patternId);
 }
 );

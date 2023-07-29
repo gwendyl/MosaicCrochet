@@ -2,40 +2,6 @@
 $(document).ready(function () {
 
     ////////////////////////////////////////////
-    // file links
-    ////////////////////////////////////////////
-    
-    // var linkBars = [];
-    // linkBars = document.getElementsByClassName("patternlink");
-    // for(i=0;i<linkBars.length; i++)
-    // {
-    //     linkBars[i].addEventListener("click", function(e) {
-    //         axios.get('/openPattern', {
-    //             patternName: this.id.substring(4),
-    //         })
-    //         .then(function (response) {
-    //             console.log('axios .then response');
-    //             console.log(response);
-    //         })
-    //         .catch(function (error) {
-    //             console.log(error);
-    //         });
-
-    //         // axios.post('/openPattern', {
-    //         //     patternName: this.id.substring(4),
-    //         // })
-    //         // .then(function (response) {
-    //         //     console.log('axios .then response');
-    //         //     console.log(response);
-    //         // })
-    //         // .catch(function (error) {
-    //         //     console.log(error);
-    //         // });
-    //     })
-    // }
-
-
-    ////////////////////////////////////////////
     // delete buttons
     ////////////////////////////////////////////
     
@@ -50,12 +16,12 @@ $(document).ready(function () {
                     _id: this.id.substring(6),
                 })
                 .then(function (response) {
-                    console.log(response);
+                    console.log('calling reload');
+                    // window.location.reload()
                 })
                 .catch(function (error) {
                     console.log(error);
                 });
-                window.location.reload()
             }
         })
     }

@@ -291,7 +291,6 @@ exports.sendResetLink = async (req, res) => {
 }
 
 exports.authorized = (req) => {
-    // console.log(req.session);
     if(req.session.authenticated) {
         return true;
     } else {
@@ -315,27 +314,22 @@ exports.renderHome = (res, usermsg) => {
 }
 exports.renderContent = (req, res, usermsg) => {
     if(this.authorized(req)) {
-        console.log('authorized')
         res.render("content", {userMsg: usermsg, is_auth: true})
     } else {
-        console.log('not authorized');
-        res.redirect('/');
+        res.redirect('/login');
     };
 }
 
-// exports.renderPatternList = (req, res, usermsg) => {
-//     console.log("reslist: " + res.list);
-//     if(this.authorized(req)) {
-//         console.log('authorized')
-//         res.render("patternList", {userMsg: usermsg, is_auth: true})
-//     } else {
-//         console.log('not authorized');
-//         res.redirect('/');
-//     };
-// }
-
 exports.renderLogin = (res, usermsg) => {
     res.render("login", {userMsg: usermsg, is_auth: false});
+}
+
+exports.renderAbout = (res, usermsg) => {
+    res.render("about", {userMsg: usermsg, is_auth: false});
+}
+
+exports.renderResources = (res, usermsg) => {
+    res.render("resources", {userMsg: usermsg, is_auth: false});
 }
 
 exports.renderRegister = (res, usermsg) => {

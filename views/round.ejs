@@ -6,22 +6,33 @@
 
 <main class="form-signin m-auto">
     <div class="jumbotron">
-        <h1>In the Round</h1>            
+        <h1>Mosaic Crochet In the Round</h1>            
         <div class="container">
             <!-- Content here -->
             This is a mosaic-crochet pattern visualization tool.  It is intended for intermediate to advanced crochet artists that are familiar 
             with basic mosaic crochet techniques.  Links to instructional videos can be found on the <a href="/resources">resources</a> page of this website.
             <ul>
-                <li>I recommend a 6 stitch increase each round for a flat result.</li>
-                <li>Increase stitch is outlined with bold border</li>
-                <li>when two stitches meet at same drop-down location, choose the stitch that looks the best</li>
+                <li>I recommend a 6 stitch increase each round for a flat result, but you can adjust this using the 'Stitches in Round 1' field.</li>
+                <li>A recommended increase stitch is outlined with bold border</li>
             </ul>
         </div>
         <div class="my-3 p-3 bg-white rounded box-shadow">
-            <h1 id="patternName"></h1>
-            <button class="btn-secondary" name = "rename" id = "rename">Rename Pattern</button>
-            <input class="isHidden" type="text" name="patternNameInput" id="patternNameInput" required>
-            <label class="isHidden" id="patternNameLabel" for="patternNameInput">Pattern Name</label><br>
+            <div class="row align-items-center">
+                <div class="col-3">
+                    <h1 id="patternName"></h1>
+                </div>
+                <div class="col-1">
+                    <button class="btn-secondary" name = "rename" id = "rename" title='Rename Pattern'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="col">
+                    <input class="isHidden" type="text" name="patternNameInput" id="patternNameInput" required>
+                    <label class="isHidden" id="patternNameLabel" for="patternNameInput">New Name</label><br>
+                </div>
+            </div>
         </div>
         <!-- <form action="roundSettings" method="post"> -->
         <div class="my-3 p-3 bg-white rounded box-shadow">
@@ -38,8 +49,14 @@
                         <label for="baseStitches">Stitches in Round 1</label>
                     </div>
                     <div class="col">
-                        <input type="number" name = "stitchSize" id="stitchSize" required autofocus min="6" max="20">
-                        <label for="stitchSize">Stitch Size</label>
+                        <select class="form-select" name="stitchSize" id="stitchSize">
+                            <option value="10">Small</option>
+                            <option value="15">Medium</option>
+                            <option value="20">Large</option>
+                          </select>
+                          <label for="stitchSize">Stitch Size</label>
+                          <!-- <input type="number" name = "stitchSize" id="stitchSize" required autofocus min="6" max="20">
+                         -->
                     </div>
                 </div>
                 <div class="row">
@@ -56,7 +73,53 @@
                         <input type="color" class="form-control form-control-color" name = "color3" id="color3" title="Choose your first color">
                     </div>
                 </div>
-                <button class="btn-secondary" name = "go" id = "goButton">Reset Chart</button>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="showMarks" checked>
+                    <label class="form-check-label" for="showMarks">
+                      Show Stitch Marks
+                    </label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="createSymmetry" checked>
+                    <label class="form-check-label" for="createSymmetry">
+                      Keep Symmetric
+                    </label>
+                  </div>
+                  <button class="btn-secondary" name = "randomize" id = "randomize" title='Generate Random Pattern'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-shuffle" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M0 3.5A.5.5 0 0 1 .5 3H1c2.202 0 3.827 1.24 4.874 2.418.49.552.865 1.102 1.126 1.532.26-.43.636-.98 1.126-1.532C9.173 4.24 10.798 3 13 3v1c-1.798 0-3.173 1.01-4.126 2.082A9.624 9.624 0 0 0 7.556 8a9.624 9.624 0 0 0 1.317 1.918C9.828 10.99 11.204 12 13 12v1c-2.202 0-3.827-1.24-4.874-2.418A10.595 10.595 0 0 1 7 9.05c-.26.43-.636.98-1.126 1.532C4.827 11.76 3.202 13 1 13H.5a.5.5 0 0 1 0-1H1c1.798 0 3.173-1.01 4.126-2.082A9.624 9.624 0 0 0 6.444 8a9.624 9.624 0 0 0-1.317-1.918C4.172 5.01 2.796 4 1 4H.5a.5.5 0 0 1-.5-.5z"/>
+                        <path d="M13 5.466V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192zm0 9v-3.932a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192z"/>
+                      </svg>
+                      Random
+                </button>
+                <!-- <button class="btn-secondary" name = "geo" id = "geo" title='Generate Geometric Pattern'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-life-preserver" viewBox="0 0 16 16">
+                        <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm6.43-5.228a7.025 7.025 0 0 1-3.658 3.658l-1.115-2.788a4.015 4.015 0 0 0 1.985-1.985l2.788 1.115zM5.228 14.43a7.025 7.025 0 0 1-3.658-3.658l2.788-1.115a4.015 4.015 0 0 0 1.985 1.985L5.228 14.43zm9.202-9.202-2.788 1.115a4.015 4.015 0 0 0-1.985-1.985l1.115-2.788a7.025 7.025 0 0 1 3.658 3.658zm-8.087-.87a4.015 4.015 0 0 0-1.985 1.985L1.57 5.228A7.025 7.025 0 0 1 5.228 1.57l1.115 2.788zM8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+                      </svg>
+                      Geometric
+                </button> -->
+
+                <button class="btn-secondary" name = "go" id = "goButton" title='Reset Chart'>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                    </svg>
+                    Reset
+                </button>
+                <button class="btn-secondary" id="printButton" title="Print Chart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16">
+                        <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                        <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+                    </svg>
+                    Print
+                </button>
+                <button class="btn-secondary" id="saveButton" title="Save Chart to Cloud">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cloud-arrow-up" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M7.646 5.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 6.707V10.5a.5.5 0 0 1-1 0V6.707L6.354 7.854a.5.5 0 1 1-.708-.708l2-2z"/>
+                        <path d="M4.406 3.342A5.53 5.53 0 0 1 8 2c2.69 0 4.923 2 5.166 4.579C14.758 6.804 16 8.137 16 9.773 16 11.569 14.502 13 12.687 13H3.781C1.708 13 0 11.366 0 9.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383zm.653.757c-.757.653-1.153 1.44-1.153 2.056v.448l-.445.049C2.064 6.805 1 7.952 1 9.318 1 10.785 2.23 12 3.781 12h8.906C13.98 12 15 10.988 15 9.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 4.825 10.328 3 8 3a4.53 4.53 0 0 0-2.941 1.1z"/>
+                    </svg>
+                    Save
+                </button> 
             </div>
         </div>    
         <!-- </form> -->
@@ -73,12 +136,11 @@
 
 
 
-        <div class="d-flex flex-column flex-md-row p-4 gap-4 py-md-5 align-items-center justify-content-center">
+        <!-- <div class="d-flex flex-column flex-md-row p-4 gap-4 py-md-5 align-items-center justify-content-center">
             <div class="col-sm-3">
-                <button class="btn-light" id="printButton">Print</button>
-                <button class="btn-light" id="saveButton">Save1</button>                  </div>
+               </div>
             </div>
-        </div>
+        </div> -->
 
           
 
@@ -89,7 +151,7 @@
 
     </div>
     <% if (pattern) { %>
-        <div class="alert alert-warning" role="alert">
+        <div class="alert alert-warning isHidden" role="alert"">
             <input type="number" name = "opBaseStitches" id="opBaseStitches" value="<%= pattern.baseStitchCount %>" >
             <input type="text" name = "opId" id="opId" value="<%= pattern._id %>" >
             <input type="number" name = "opStitchSize" id="opStitchSize" value="<%= pattern.stitchSize %>" >
