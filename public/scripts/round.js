@@ -143,35 +143,38 @@ $(document).ready(function () {
         drawAllStitches();
     });
 
-    let geoButton = document.getElementById('geo');
-    geoButton.addEventListener("click", function() {
-        createGeoPattern();
-        drawAllStitches();
-    });
+    // let geoButton = document.getElementById('geo');
+    // geoButton.addEventListener("click", function() {
+    //     createGeoPattern();
+    //     drawAllStitches();
+    // });
 
     
     let printButton = document.getElementById('printButton');
     printButton.addEventListener("click", function() {
-        const dataUrl = canvas.toDataURL();
 
-        let windowContent = '<!DOCTYPE html>';
-        windowContent += '<html>';
-        windowContent += '<head><title>Print canvas</title></head>';
-        windowContent += '<body>';
-        windowContent += '<img src="' + dataUrl + '">';
-        windowContent += '</body>';
-        windowContent += '</html>';
+        window.print();
 
-        const printWin = window.open('', '', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
-        printWin.document.open();
-        printWin.document.write(windowContent);
+        // const dataUrl = canvas.toDataURL();
 
-        printWin.document.addEventListener('load', function () {
-            printWin.focus();
-            printWin.print();
-            printWin.document.close();
-            printWin.close();
-        }, true);
+        // let windowContent = '<!DOCTYPE html>';
+        // windowContent += '<html>';
+        // windowContent += '<head><title>Print canvas</title></head>';
+        // windowContent += '<body>';
+        // windowContent += '<img src="' + dataUrl + '">';
+        // windowContent += '</body>';
+        // windowContent += '</html>';
+
+        // const printWin = window.open('', '', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
+        // printWin.document.open();
+        // printWin.document.write(windowContent);
+
+        // printWin.document.addEventListener('load', function () {
+        //     printWin.focus();
+        //     printWin.print();
+        //     printWin.document.close();
+        //     printWin.close();
+        // }, true);
     });
 
 
@@ -449,12 +452,12 @@ $(document).ready(function () {
         // if should be symmetrical, find symmetry stitches and drop them too
         if(createSymmetry() && recurseFlag) {
             // use mod to compute the symmetry group that are looking for
-            let symmetryGroup = stitch.id % baseStitchQty();
+            let symmetryGroup = stitch.id % (stitch.roundId + 1);
             stitches.forEach(symStitch => {
                 // if the stitch is in the same round and in the same symmetry group, it should also drop down
                 // but don't call for the stitch you already did, because will undo it
                 if (symStitch.roundId == stitch.roundId && 
-                    symStitch.id % baseStitchQty() == symmetryGroup &&
+                    symStitch.id % (symStitch.roundId + 1) == symmetryGroup &&
                     symStitch.id != stitch.id) {
                     showErrors = false;
                     attemptDropDown(symStitch,false);
@@ -526,7 +529,11 @@ $(document).ready(function () {
     }
 
     function writeRoundDetails() {
-        return;  //will add this later if people want it
+        addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rounds earlier.", 'inc');
+        addInstrLine("Stitches in bold outline are recommended increase stitches.  They should be constructed in the same lower-round stitch as their immediate prior stitch.", 'dd');
+        addInstrLine("blsc = Back-Loop Single Crochet (US terminology)", 'blsc');
+        addInstrLine("dddc = Drop-Down Double Crochet (US terminology)", 'dddc');
+        addInstrLine("__________________________________________________________________");
         rounds.forEach(round => {
             addRoundDetail(round);
         })
@@ -542,7 +549,7 @@ $(document).ready(function () {
         let prevInstr = " ";
         let instrCount = 0;
         if(round.id==0) {
-            roundInstr = round.stitchCount + ' sc in magic circle'
+            roundInstr = 'R1: ' + round.stitchCount + ' sc in magic circle'
         } else {
 
             stitches.forEach(stitch => {
@@ -571,7 +578,7 @@ $(document).ready(function () {
             roundInstr = roundInstr.substring(2);
 
             // add intro text
-            roundInstr = "R" + round.humanId + " (" + round.stitchCount + " stitches): " + roundInstr + ', using increase stitches where indicated';
+            roundInstr = "R" + round.humanId + " (" + round.stitchCount + " stitches): " + roundInstr;
         }
         
         // build instruction row as: row 
@@ -591,6 +598,23 @@ $(document).ready(function () {
         ul.appendChild(li);
 
         $('#' + roundId).addClass('list-group-item');
+    }
+
+    function addInstrLine(instr, label) {
+        // var colorDiv = document.createElement('div');
+        // colorDiv.className = 'box inline';
+        // colorDiv.style.backgroundColor = round.baseColorId;
+        
+
+        var ul = document.getElementById("roundsList");
+
+        var li = document.createElement("li");
+        li.setAttribute('id', label);
+        //li.appendChild(colorDiv);
+        li.appendChild(document.createTextNode(instr));
+        ul.appendChild(li);
+
+        $('#' + label).addClass('list-group-item');
     }
 
     function removeRoundDetail(round) {

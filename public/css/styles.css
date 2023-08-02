@@ -85,3 +85,10 @@ h1{
 .overlay {
   position: absolute;
 }
+
+
+@media print {
+  .noPrint{
+    display:none;
+  }
+}
