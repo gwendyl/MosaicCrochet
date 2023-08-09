@@ -82,6 +82,11 @@ h1{
   color: lightgray;
 }
 
+.subtitle {
+  padding-top: 20px;
+  font-style: italic;
+}
+
 .overlay {
   position: absolute;
 }

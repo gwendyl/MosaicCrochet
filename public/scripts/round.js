@@ -47,6 +47,7 @@ $(document).ready(function () {
 
     $('#nbrColors')[0].addEventListener('change', (e) => {
         renderColorPickers();
+        resetChart();
     });
 
     $('#createSymmetry')[0].addEventListener('click', (e) => {
@@ -100,35 +101,47 @@ $(document).ready(function () {
     
     let goButton = document.getElementById('goButton');
     goButton.addEventListener("click", function() {
-
-        // update local storage with new values
-        localStorage.setItem('bq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 6);
-        localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
-        let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
-        let colors = [];
-        // JSON can't work with # signs, so store only the values
-        
-        colors.push($('#color0').val().slice(1));
-        colors.push($('#color1').val().slice(1));
-        if (nbrColors > 2) colors.push($('#color2').val().slice(1));
-        if (nbrColors > 3) colors.push($('#color3').val().slice(1));
- 
-        localStorage.setItem('ca', JSON.stringify(colors));        
-
-
-        // must reset chart
-        stitches = [];
-        // let shortStitches = [];
-        localStorage.setItem('sts', JSON.stringify([]));
-
-        //saveLocally();
-
-        constructStitches();
-        drawAllStitches();
-        writeRoundDetails();
-        return;
-
+        resetChart();
     });
+
+    let baseStitches = document.getElementById('baseStitches');
+    baseStitches.addEventListener("change", function() {
+        resetChart();
+    });
+    
+    let stitchSizeField = document.getElementById('stitchSize');
+    stitchSizeField.addEventListener("change", function() {
+        resetChart();
+    });
+    
+    let color0Field = document.getElementById('color0');
+    color0Field.addEventListener("change", function() {
+        resetChart();
+    });
+    
+    let color1Field = document.getElementById('color1');
+    color1Field.addEventListener("change", function() {
+        resetChart();
+    });
+    
+    let color2Field = document.getElementById('color2');
+    color2Field.addEventListener("change", function() {
+        resetChart();
+    });
+    
+    let color3Field = document.getElementById('color3');
+    color3Field.addEventListener("change", function() {
+        resetChart();
+    });
+    
+
+    // localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
+    // let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
+    // let colors = [];
+    // // JSON can't work with # signs, so store only the values
+    
+    // colors.push($('#color0').val().slice(1));
+    // colors.push($('#color1').val().slice(1));
 
 
     let saveButton = document.getElementById('saveButton');
@@ -695,6 +708,37 @@ $(document).ready(function () {
         });
 
     }
+
+
+    function resetChart(){
+        // update local storage with new values
+        localStorage.setItem('bq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 6);
+        localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
+        let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
+        let colors = [];
+        // JSON can't work with # signs, so store only the values
+        
+        colors.push($('#color0').val().slice(1));
+        colors.push($('#color1').val().slice(1));
+        if (nbrColors > 2) colors.push($('#color2').val().slice(1));
+        if (nbrColors > 3) colors.push($('#color3').val().slice(1));
+    
+        localStorage.setItem('ca', JSON.stringify(colors));        
+    
+    
+        // must reset chart
+        stitches = [];
+        // let shortStitches = [];
+        localStorage.setItem('sts', JSON.stringify([]));
+    
+        //saveLocally();
+    
+        constructStitches();
+        drawAllStitches();
+        writeRoundDetails();
+    
+    
+    }
 }); //document ready
 
 function initializeLocalStorage() {
@@ -776,3 +820,4 @@ function sendInfoAlert(textMsg, toDiv) {
 
     toDiv.appendChild(alertDiv);
 }
+
