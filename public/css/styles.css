@@ -21,6 +21,11 @@
   margin-right: 10px;
 }
 
+.box {
+  height:20px;
+  width: 20px;
+  border:1px solid #000000;
+}
 canvas {
   width: 100%;
   height: auto;

@@ -259,7 +259,11 @@ $(document).ready(function () {
 
 
                 let isIncrease = false;
-                if (Math.floor(rawStitchNbr) == rawStitchNbr) isIncrease = true;
+                let writtenInstr = "blsc"
+                if (Math.floor(rawStitchNbr) == rawStitchNbr) {
+                    isIncrease = true;
+                    writtenInstr = "incBlsc"
+                }
 
                 // find the 'grandmother' of the stitch.  this is the stitch that this stitch would drop down to
                 // we just found the parentStitchId, which is this stitch's mother.  So just need to get the parentStitchId of the parentStitchId.
@@ -279,7 +283,7 @@ $(document).ready(function () {
                     grandparentStitchId: grandparentStitchId,
                     isDropDown: isDropDown,
                     isIncrease: isIncrease,
-                    writtenInstruction: "blsc"
+                    writtenInstruction: writtenInstr
                 });
 
                 // prep for next cycle
@@ -459,7 +463,11 @@ $(document).ready(function () {
         // if already a dd, clear 
         if (colorLowerStitch(stitch, !stitch.isDropDown)) {
             stitch.isDropDown = !stitch.isDropDown;
-            stitch.writtenInstruction = "dddc"
+            if (stitch.isIncrease) {
+                stitch.writtenInstruction = "incDddc"
+            } else {
+                stitch.writtenInstruction = "dddc"
+            }
         };
 
         // if should be symmetrical, find symmetry stitches and drop them too
@@ -545,7 +553,12 @@ $(document).ready(function () {
         addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rounds earlier.", 'inc');
         addInstrLine("Stitches in bold outline are recommended increase stitches.  They should be constructed in the same lower-round stitch as their immediate prior stitch.", 'dd');
         addInstrLine("blsc = Back-Loop Single Crochet (US terminology)", 'blsc');
+        addInstrLine("incBlsc = Back-Loop Single Crochet - Increase (US terminology)", 'incblsc');
         addInstrLine("dddc = Drop-Down Double Crochet (US terminology)", 'dddc');
+        addInstrLine("incDddc = Drop-Down Double Crochet - Increase (US terminology)  For this stitch, drop down to the appropriate lower loop as normal, however do not skip a stitch before placing the next stitch.  This will accomplish the increase.", 'incdddc');
+        addInstrLine("sl = Slip Stitch to close Round", 'slst');
+        addInstrLine("ch = Chain", 'ch');
+        addInstrLine("NOTE:  First stitch of each round starts in the same location as the slip stitch that joined the round together", 'note');
         addInstrLine("__________________________________________________________________");
         rounds.forEach(round => {
             addRoundDetail(round);
@@ -562,7 +575,7 @@ $(document).ready(function () {
         let prevInstr = " ";
         let instrCount = 0;
         if(round.id==0) {
-            roundInstr = 'R1: ' + round.stitchCount + ' sc in magic circle'
+            roundInstr = 'R1: ' + round.stitchCount + ' sc in magic circle, sl in new color, ch'
         } else {
 
             stitches.forEach(stitch => {
@@ -578,7 +591,8 @@ $(document).ready(function () {
                     instrCount++;
                 } else {
                     // write what we know
-                    if (instrCount > 0) roundInstr = roundInstr + ", " + instrCount + " x " + prevInstr;
+                    if (instrCount == 1) roundInstr = roundInstr + ", " + prevInstr;
+                    if (instrCount > 1) roundInstr = roundInstr + ", " + instrCount + " x " + prevInstr;
                     // set up for next batch
                     prevInstr = currInstr;
                     instrCount = 1;
@@ -586,19 +600,22 @@ $(document).ready(function () {
             })
 
             //write the last instruction
-            roundInstr = roundInstr + ", " + instrCount + " x " + prevInstr;
+            if (instrCount == 1) roundInstr = roundInstr + ", "  + prevInstr;
+            if (instrCount > 1) roundInstr = roundInstr + ", " + instrCount + " x " + prevInstr;
             //trim off the leading comma
             roundInstr = roundInstr.substring(2);
 
             // add intro text
             roundInstr = "R" + round.humanId + " (" + round.stitchCount + " stitches): " + roundInstr;
+            // add closing text
+            roundInstr = roundInstr + ", sl in new color, ch"
         }
         
         // build instruction row as: row 
         // figure out color div definition
         var colorDiv = document.createElement('div');
-        colorDiv.className = 'box inline';
-        colorDiv.style.backgroundColor = round.baseColorId;
+        colorDiv.className = 'box';
+        colorDiv.style.backgroundColor =  colorsArrayWithHash()[round.baseColorId];
         
 
         var ul = document.getElementById("roundsList");
