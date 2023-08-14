@@ -82,8 +82,7 @@ app.get("/patternlist", function (req, res) {
 
 
 app.get("/round", function (req, res)  {patterns.renderRound(req,res)});
-
-
+app.get("/rect", function (req, res)  {patterns.renderRect(req,res)});
 
 app.post("/savePattern",   function(req,res) {
     patterns.saveCurrentPattern(req,res,"");
@@ -93,6 +92,7 @@ app.post("/deletePattern", function(req,res) {
     patterns.deletePattern(req, res,"");
 }
 );
+
 app.get("/openPattern", function(req,res) {
     const patternId = url.parse(req.url, true).query.id;
     patterns.openPattern(req, res, "", patternId);

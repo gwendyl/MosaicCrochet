@@ -1,21 +1,16 @@
 <%- include('partials/header') %>
 
-<script type="text/javascript" src="scripts/common.js"></script>
-<script type="text/javascript" src="scripts/round.js"></script>
+<script type="text/javascript" src="scripts/rect.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
 
 
 <main class="form-signin m-auto">
     <div class="jumbotron">
-        <h1>Mosaic Crochet In the Round</h1>            
+        <h1>Rectangular Mosaic Crochet</h1>            
         <div class="container noPrint">
             <!-- Content here -->
             This is a mosaic-crochet pattern visualization tool.  It is intended for intermediate to advanced crochet artists that are familiar 
             with basic mosaic crochet techniques.  Links to instructional videos can be found on the <a href="/resources">resources</a> page of this website.
-            <ul>
-                <li>I recommend a 6 stitch increase each round for a flat result, but you can adjust this using the 'Stitches in Round 1' field.</li>
-                <li>A recommended increase stitch is outlined with bold border</li>
-            </ul>
         </div>
         <div class="my-3 p-3 bg-white rounded box-shadow">
             <div class="row align-items-center">
@@ -93,12 +88,6 @@
                           </svg>
                           Random
                     </button>
-                    <!-- <button class="btn-secondary" name = "geo" id = "geo" title='Generate Geometric Pattern'>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-life-preserver" viewBox="0 0 16 16">
-                            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm6.43-5.228a7.025 7.025 0 0 1-3.658 3.658l-1.115-2.788a4.015 4.015 0 0 0 1.985-1.985l2.788 1.115zM5.228 14.43a7.025 7.025 0 0 1-3.658-3.658l2.788-1.115a4.015 4.015 0 0 0 1.985 1.985L5.228 14.43zm9.202-9.202-2.788 1.115a4.015 4.015 0 0 0-1.985-1.985l1.115-2.788a7.025 7.025 0 0 1 3.658 3.658zm-8.087-.87a4.015 4.015 0 0 0-1.985 1.985L1.57 5.228A7.025 7.025 0 0 1 5.228 1.57l1.115 2.788zM8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-                          </svg>
-                          Geometric
-                    </button> -->
     
                     <button class="btn-secondary" name = "go" id = "goButton" title='Reset Chart'>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle" viewBox="0 0 16 16">
@@ -116,12 +105,12 @@
                       Show Stitch Marks
                     </label>
                   </div>
-                  <div class="form-check">
+                  <!-- <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="" id="createSymmetry" checked>
                     <label class="form-check-label" for="createSymmetry">
                       Keep Symmetric
                     </label>
-                  </div>
+                  </div> -->
 
                 <button class="btn-secondary" id="printButton" title="Print Chart">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16">

@@ -116,3 +116,11 @@ exports.renderRound = (req, res, pattern) => {
     res.render("round", {userMsg: "", is_auth: true, req: req, pattern:pattern});
 }
         
+exports.renderRect = (req, res, pattern) => {
+    if (!users.authorized(req)) {
+        res.redirect('/');
+        return;
+    }
+    res.render("rect", {userMsg: "", is_auth: true, req: req, pattern:pattern});
+}
+        

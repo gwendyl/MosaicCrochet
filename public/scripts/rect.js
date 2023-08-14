@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function(){
+$(document).ready(function () {
 
     //////////////////////////////////////////////////////
     // if local storeage not initiated, default them
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", function(){
     let stitches = [];
 
     if (canvas.getContext) {
-        drawStartingCircle();
+        drawStartingRow();
         renderColorPickers();
         constructStitches();
         reconstructFromLocal();
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function(){
        // saveLocally();
         drawAllStitches();
         //drawInCenter();
-        writeRoundDetails();
+        writeRowDetails();
     }
 
     $('#nbrColors')[0].addEventListener('change', (e) => {
@@ -50,10 +50,10 @@ document.addEventListener("DOMContentLoaded", function(){
         resetChart();
     });
 
-    $('#createSymmetry')[0].addEventListener('click', (e) => {
-        if ($('#createSymmetry')[0].checked) localStorage.setItem('sy',  1)
-        else localStorage.setItem('sy',  0);
-    });
+    // $('#createSymmetry')[0].addEventListener('click', (e) => {
+    //     if ($('#createSymmetry')[0].checked) localStorage.setItem('sy',  1)
+    //     else localStorage.setItem('sy',  0);
+    // });
 
     $('#showMarks')[0].addEventListener('click', (e) => {
         if ($('#showMarks')[0].checked) localStorage.setItem('sh',  1)
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function(){
             }
         })
         drawAllStitches();
-        writeRoundDetails();
+        writeRowDetails();
 
     });
 
@@ -210,6 +210,90 @@ document.addEventListener("DOMContentLoaded", function(){
         })
         showErrors = true;
     }
+    function constructStitches() {
+
+        // originX = canvas.getBoundingClientRect().width / 2;
+        // originY = canvas.getBoundingClientRect().height / 2;    
+        originX = canvas.width / 2;
+        originY = canvas.height / 2;    
+        let ss = [];
+
+        // constant for all stitches
+        let startingX = originX;
+        let id = 0;
+        let currColorId = 0;
+        let rndCount = Math.min(canvas.width / (4 * stitchSize()) - 1, canvas.height / (4 * stitchSize()) - 1);
+
+        for (let j = 0; j < rndCount; j++) {
+       
+            let currentRound = {
+                id: j,
+                humanId: j + 1,
+                stitchCount: baseStitchQty() * (j + 1),
+                baseColorId: currColorId,
+                firstStitchNbr: id
+            }
+            rounds.push(currentRound);
+
+            let theta = (2 * Math.PI / currentRound.stitchCount);
+            // let startingY = originY + 2 * radiusY * (j + 1);
+            for (let i = 0; i < currentRound.stitchCount; i++) {
+
+                // let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
+                // let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
+
+                // let newX = 0 - Math.sin(i * theta) * (startingY - originY) + originX;
+                // let newY = Math.cos(i * theta) * (startingY - originY) + originY;
+
+
+                // determine the lower stitch that it will build upon
+                // increment: account for the extra stitch 
+                let nbrOfStitchesFromFirstStitch = id - currentRound.firstStitchNbr + 1;
+                let increment = nbrOfStitchesFromFirstStitch * (1 / (j + 1));
+
+                // drop down stitch = current stitch number + the number of stitches around + 
+                // the incremental amount to increase the stitch count for the next row
+                var parentStitchId;
+                let rawStitchNbr = id - j * baseStitchQty() - increment;
+                if (j > 0) parentStitchId = Math.round(rawStitchNbr);
+
+
+                let isIncrease = false;
+                let writtenInstr = "blsc"
+                if (Math.floor(rawStitchNbr) == rawStitchNbr) {
+                    isIncrease = true;
+                    writtenInstr = "incBlsc"
+                }
+
+                // find the 'grandmother' of the stitch.  this is the stitch that this stitch would drop down to
+                // we just found the parentStitchId, which is this stitch's mother.  So just need to get the parentStitchId of the parentStitchId.
+                let grandparentStitchId = getParent(parentStitchId);
+
+                // reconstruct relevant information from saved shortStitches
+                let stitchColorId = currColorId;
+                let isDropDown = false;
+      
+                stitches.push({
+                    theta: theta * i,
+                    id: id,  //save
+                    currColorId: stitchColorId,
+                    baseColorId: stitchColorId,
+                    roundId: j,
+                    parentStitchId: parentStitchId,
+                    grandparentStitchId: grandparentStitchId,
+                    isDropDown: isDropDown,
+                    isIncrease: isIncrease,
+                    writtenInstruction: writtenInstr
+                });
+
+                // prep for next cycle
+                id++;
+            }
+
+            currColorId++;
+            if (currColorId >= nbrColors()) currColorId = 0;
+        }
+    }
 
     function stitchLocation(stitch) {
         //let originX = canvas.getBoundingClientRect().width / 2;
@@ -338,7 +422,7 @@ document.addEventListener("DOMContentLoaded", function(){
         return pos;
     };
 
-    function drawStartingCircle() {
+    function drawStartingRow() {
         originX = canvas.width / 2;
         originY = canvas.height / 2;    
 
@@ -465,7 +549,7 @@ document.addEventListener("DOMContentLoaded", function(){
         canvas.stroke();
     }
 
-    function writeRoundDetails() {
+    function writeRowDetails() {
         addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rounds earlier.", 'inc');
         addInstrLine("Stitches in bold outline are recommended increase stitches.  They should be constructed in the same lower-round stitch as their immediate prior stitch.", 'dd');
         addInstrLine("blsc = Back-Loop Single Crochet (US terminology)", 'blsc');
@@ -554,9 +638,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
         var ul = document.getElementById("roundsList");
 
-        var oldLi = document.getElementById(label);
-        if (oldLi) ul.removeChild(oldLi);
-        
         var li = document.createElement("li");
         li.setAttribute('id', label);
         //li.appendChild(colorDiv);
@@ -580,12 +661,71 @@ document.addEventListener("DOMContentLoaded", function(){
     //     canvas.height = "auto";
     // }
 
+    function renderColorPickers() {
+        // color 1 always rendered
+        // color 2 always rendered
+
+        let nbrColorElement = $('#nbrColors')[0];
+
+        if (nbrColorElement.value < 3) {
+            $('#color2').addClass('isHidden');
+            $('#color2label').addClass('isHidden');
+            $('#color3').addClass('isHidden');
+            $('#color3label').addClass('isHidden');
+        } else if (nbrColorElement.value < 4) {
+            $('#color2').removeClass('isHidden');
+            $('#color2label').removeClass('isHidden');
+            $('#color3').addClass('isHidden');
+            $('#color3label').addClass('isHidden');
+        } else {
+            $('#color2').removeClass('isHidden');
+            $('#color2label').removeClass('isHidden');
+            $('#color3').removeClass('isHidden');
+            $('#color3label').removeClass('isHidden');
+        }
+
+    }
 
     function sendRoundInfoAlert(textMsg) {
         if(!showErrors) return;
         var errorDiv = document.getElementById('errorDiv');
         sendInfoAlert(textMsg, errorDiv);
     }
+
+
+
+
+
+    function saveNow() {
+        // only save the stitches that have changed from default
+        var ssTemp = [];
+        stitches.forEach(stitch => {
+            if (stitch.isDropDown) {
+                ssTemp.push(stitch.id);
+                localStorage.setItem('sts', JSON.stringify(ssTemp));
+            }
+        })
+        //const stitchesJson = JSON.stringify(shortStitches);
+
+                
+
+        axios.post('/savePattern', {
+            dd: localStorage.getItem('sts'),
+            bq: baseStitchQty(),
+            sz: stitchSize(),
+            ca: localStorage.getItem('ca'),
+            t:  patternName(),
+            id: localStorage.getItem('id')
+        })
+        .then(function (response) {
+            console.log(response);
+        })
+        .catch(function (error) {
+            console.log(error);
+        });
+
+    }
+
 
     function resetChart(){
         // update local storage with new values
@@ -612,125 +752,89 @@ document.addEventListener("DOMContentLoaded", function(){
     
         constructStitches();
         drawAllStitches();
-        writeRoundDetails();
+        writeRowDetails();
     
-    
-    }
-    
-    function constructStitches() {
-    
-        // originX = canvas.getBoundingClientRect().width / 2;
-        // originY = canvas.getBoundingClientRect().height / 2;    
-        originX = canvas.width / 2;
-        originY = canvas.height / 2;    
-        let ss = [];
-    
-        // constant for all stitches
-        let startingX = originX;
-        let id = 0;
-        let currColorId = 0;
-        let rndCount = Math.min(canvas.width / (4 * stitchSize()) - 1, canvas.height / (4 * stitchSize()) - 1);
-    
-        for (let j = 0; j < rndCount; j++) {
-       
-            let currentRound = {
-                id: j,
-                humanId: j + 1,
-                stitchCount: baseStitchQty() * (j + 1),
-                baseColorId: currColorId,
-                firstStitchNbr: id
-            }
-            rounds.push(currentRound);
-    
-            let theta = (2 * Math.PI / currentRound.stitchCount);
-            // let startingY = originY + 2 * radiusY * (j + 1);
-            for (let i = 0; i < currentRound.stitchCount; i++) {
-    
-                // let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
-                // let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
-    
-                // let newX = 0 - Math.sin(i * theta) * (startingY - originY) + originX;
-                // let newY = Math.cos(i * theta) * (startingY - originY) + originY;
-    
-    
-                // determine the lower stitch that it will build upon
-                // increment: account for the extra stitch 
-                let nbrOfStitchesFromFirstStitch = id - currentRound.firstStitchNbr + 1;
-                let increment = nbrOfStitchesFromFirstStitch * (1 / (j + 1));
-    
-                // drop down stitch = current stitch number + the number of stitches around + 
-                // the incremental amount to increase the stitch count for the next row
-                var parentStitchId;
-                let rawStitchNbr = id - j * baseStitchQty() - increment;
-                if (j > 0) parentStitchId = Math.round(rawStitchNbr);
-    
-    
-                let isIncrease = false;
-                let writtenInstr = "blsc"
-                if (Math.floor(rawStitchNbr) == rawStitchNbr) {
-                    isIncrease = true;
-                    writtenInstr = "incBlsc"
-                }
-    
-                // find the 'grandmother' of the stitch.  this is the stitch that this stitch would drop down to
-                // we just found the parentStitchId, which is this stitch's mother.  So just need to get the parentStitchId of the parentStitchId.
-                let grandparentStitchId = getParent(parentStitchId);
-    
-                // reconstruct relevant information from saved shortStitches
-                let stitchColorId = currColorId;
-                let isDropDown = false;
-      
-                stitches.push({
-                    theta: theta * i,
-                    id: id,  //save
-                    currColorId: stitchColorId,
-                    baseColorId: stitchColorId,
-                    roundId: j,
-                    parentStitchId: parentStitchId,
-                    grandparentStitchId: grandparentStitchId,
-                    isDropDown: isDropDown,
-                    isIncrease: isIncrease,
-                    writtenInstruction: writtenInstr
-                });
-    
-                // prep for next cycle
-                id++;
-            }
-    
-            currColorId++;
-            if (currColorId >= nbrColors()) currColorId = 0;
-        }
-    }
-    
-    function saveNow() {
-        // only save the stitches that have changed from default
-        var ssTemp = [];
-        stitches.forEach(stitch => {
-            if (stitch.isDropDown) {
-                ssTemp.push(stitch.id);
-                localStorage.setItem('sts', JSON.stringify(ssTemp));
-            }
-        })
-        //const stitchesJson = JSON.stringify(shortStitches);
-    
-                
-    
-        axios.post('/savePattern', {
-            dd: localStorage.getItem('sts'),
-            bq: baseStitchQty(),
-            sz: stitchSize(),
-            ca: localStorage.getItem('ca'),
-            t:  patternName(),
-            id: localStorage.getItem('id')
-        })
-        .then(function (response) {
-            console.log(response);
-        })
-        .catch(function (error) {
-            console.log(error);
-        });
     
     }
 }); //document ready
 
+function initializeLocalStorage() {
+    // first check to see if we were passed a pattern
+    localStorage.clear();
+    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
+    if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
+    if ($('#opDdStitches').length > 0) localStorage.setItem('sts', $('#opDdStitches').val());
+    if ($('#opColors').length > 0) localStorage.setItem('ca', $('#opColors').val());
+    if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
+    if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
+
+    // if we had a pattern, then
+    if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
+
+    if (!localStorage.getItem("t")) localStorage.setItem("t","Draft Pattern");
+    if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
+    if (!localStorage.getItem("sz")) localStorage.setItem("sz",10);
+    let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
+    if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
+    if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
+    
+
+}
+
+// easier access to local variables
+function colorsArrayNoHash() {
+    return JSON.parse(localStorage.getItem('ca'));
+}
+function colorsArrayWithHash() {
+    let initialArray = JSON.parse(localStorage.getItem('ca'));
+    var finalArray = [];
+    for(i=0; i< initialArray.length; i++) {
+        finalArray.push('#'+initialArray[i]);
+    }
+    return finalArray;
+}
+
+
+function nbrColors() {
+    return colorsArrayWithHash().length;
+}
+function showMarks() {
+    if (localStorage.getItem('sh') == 0) return false;
+    return true;
+}
+
+function createSymmetry() {
+    if (localStorage.getItem('sy') == 0) return false;
+    return true;
+}
+
+function baseStitchQty() {
+    return localStorage.getItem('bq');
+}
+function patternName() {
+    return localStorage.getItem('t');
+}
+function stitchSize() {
+    return localStorage.getItem('sz');
+}
+function shortStitches() {
+    return JSON.parse(localStorage.getItem('sts'));
+}
+
+/// needs to be moved to a shared file
+function sendInfoAlert(textMsg, toDiv) {
+    var alertImg = document.createElement("img");
+    alertImg.setAttribute('src', "close.soon");
+    alertImg.setAttribute('style', "display:none");
+    alertImg.setAttribute('onerror', "(function(el){ setTimeout(function(){ $(el).parent().remove(); },2000 ); })(this);");
+
+    let textNode = document.createTextNode(textMsg);
+    var alertDiv = document.createElement("div");
+    let divClass = "alert alert-dark overlay";
+    alertDiv.setAttribute('class', divClass);
+    alertDiv.appendChild(textNode);
+    alertDiv.appendChild(alertImg);
+
+    toDiv.appendChild(alertDiv);
+}
 
