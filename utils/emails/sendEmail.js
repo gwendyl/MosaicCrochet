@@ -17,7 +17,6 @@ const sendTemplateEmail = async (email, template_id, link) => {
    sgMail
      .send(msg)
      .then(() => {
-       console.log('Email sent')
      })
      .catch((error) => {
        console.error(error)

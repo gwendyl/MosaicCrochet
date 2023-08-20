@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     $('#nbrColors')[0].addEventListener('change', (e) => {
+        validateNumberInput($('#nbrColors')[0]);
         renderColorPickers();
         resetChart();
     });
@@ -67,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function(){
             y: e.clientY
         };
 
-        const canvasPos = toCanvasCoords(pos.x, pos.y);
+        const canvasPos = toCanvasCoords(canvas, pos.x, pos.y);
 
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
@@ -106,6 +107,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     let baseStitches = document.getElementById('baseStitches');
     baseStitches.addEventListener("change", function() {
+        validateNumberInput(this);
         resetChart();
     });
     
@@ -446,17 +448,6 @@ document.addEventListener("DOMContentLoaded", function(){
         return foundRound;
     }
 
-    function toCanvasCoords(pageX, pageY) {
-        let rect = canvas.getBoundingClientRect();
-        let scale = rect.width / canvas.width;
-        pos = {
-            x: (pageX - rect.left) / scale,
-            y: (pageY - rect.top) / scale
-        }
-
-        return pos;
-    }
-
     function lineAtAngle(x1, y1, length, angle, canvas) {
         canvas.moveTo(x1, y1);
         x2 = x1 + Math.cos(angle) * length;
@@ -556,7 +547,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
         var oldLi = document.getElementById(label);
         if (oldLi) ul.removeChild(oldLi);
-        
+
         var li = document.createElement("li");
         li.setAttribute('id', label);
         //li.appendChild(colorDiv);
@@ -714,14 +705,14 @@ document.addEventListener("DOMContentLoaded", function(){
         //const stitchesJson = JSON.stringify(shortStitches);
     
                 
-    
         axios.post('/savePattern', {
             dd: localStorage.getItem('sts'),
             bq: baseStitchQty(),
             sz: stitchSize(),
             ca: localStorage.getItem('ca'),
             t:  patternName(),
-            id: localStorage.getItem('id')
+            id: localStorage.getItem('id'),
+            tp: 'rnd'
         })
         .then(function (response) {
             console.log(response);
@@ -733,4 +724,67 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 }); //document ready
 
+
+function initializeLocalStorage() {
+    // first check to see if we were passed a pattern
+    localStorage.clear();
+    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
+    if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
+    if ($('#opDdStitches').length > 0) localStorage.setItem('sts', $('#opDdStitches').val());
+    if ($('#opColors').length > 0) localStorage.setItem('ca', $('#opColors').val());
+    if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
+    if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
+
+    // if we had a pattern, then
+    if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
+
+    if (!localStorage.getItem("t")) localStorage.setItem("t","Draft Pattern");
+    if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
+    if (!localStorage.getItem("sz")) localStorage.setItem("sz",10);
+    let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
+    if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
+    if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
+    
+
+}
+
+// easier access to local variables
+function colorsArrayNoHash() {
+    return JSON.parse(localStorage.getItem('ca'));
+}
+function colorsArrayWithHash() {
+    let initialArray = JSON.parse(localStorage.getItem('ca'));
+    var finalArray = [];
+    for(i=0; i< initialArray.length; i++) {
+        finalArray.push('#'+initialArray[i]);
+    }
+    return finalArray;
+}
+
+
+function nbrColors() {
+    return colorsArrayWithHash().length;
+}
+function showMarks() {
+    if (localStorage.getItem('sh') == 0) return false;
+    return true;
+}
+
+function createSymmetry() {
+    if (localStorage.getItem('sy') == 0) return false;
+    return true;
+}
+
+function baseStitchQty() {
+    return localStorage.getItem('bq');
+}
+function patternName() {
+    return localStorage.getItem('t');
+}
+function stitchSize() {
+    return localStorage.getItem('sz');
+}
+function shortStitches() {
+    return JSON.parse(localStorage.getItem('sts'));
+}
 

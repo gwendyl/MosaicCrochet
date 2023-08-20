@@ -9,23 +9,20 @@ $(document).ready(function () {
     deleteButtons = document.getElementsByClassName("delete");
     for(i=0;i<deleteButtons.length; i++)
     {
-        deleteButtons[i].addEventListener("click", function(e) {
-            const userResponse = confirm("Delete the pattern named " + this.id.substring(6) + "?");
+        deleteButtons[i].addEventListener("click", async function(e) {
+            const userResponse = confirm("Delete the pattern named " + this.name + "?");
             if(userResponse) {
                 axios.post('/deletePattern', {
                     _id: this.id.substring(6),
                 })
                 .then(function (response) {
-                    console.log('calling reload');
-                    // window.location.reload()
                 })
                 .catch(function (error) {
-                    console.log(error);
                 });
+                location.reload()
             }
         })
     }
 
 
 }); //document ready
-6

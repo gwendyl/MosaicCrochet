@@ -1,66 +1,3 @@
-function initializeLocalStorage() {
-    // first check to see if we were passed a pattern
-    localStorage.clear();
-    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
-    if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
-    if ($('#opDdStitches').length > 0) localStorage.setItem('sts', $('#opDdStitches').val());
-    if ($('#opColors').length > 0) localStorage.setItem('ca', $('#opColors').val());
-    if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
-    if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
-
-    // if we had a pattern, then
-    if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
-
-    if (!localStorage.getItem("t")) localStorage.setItem("t","Draft Pattern");
-    if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
-    if (!localStorage.getItem("sz")) localStorage.setItem("sz",10);
-    let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
-    if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
-    if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
-    
-
-}
-
-// easier access to local variables
-function colorsArrayNoHash() {
-    return JSON.parse(localStorage.getItem('ca'));
-}
-function colorsArrayWithHash() {
-    let initialArray = JSON.parse(localStorage.getItem('ca'));
-    var finalArray = [];
-    for(i=0; i< initialArray.length; i++) {
-        finalArray.push('#'+initialArray[i]);
-    }
-    return finalArray;
-}
-
-
-function nbrColors() {
-    return colorsArrayWithHash().length;
-}
-function showMarks() {
-    if (localStorage.getItem('sh') == 0) return false;
-    return true;
-}
-
-function createSymmetry() {
-    if (localStorage.getItem('sy') == 0) return false;
-    return true;
-}
-
-function baseStitchQty() {
-    return localStorage.getItem('bq');
-}
-function patternName() {
-    return localStorage.getItem('t');
-}
-function stitchSize() {
-    return localStorage.getItem('sz');
-}
-function shortStitches() {
-    return JSON.parse(localStorage.getItem('sts'));
-}
-
 /// needs to be moved to a shared file
 function sendInfoAlert(textMsg, toDiv) {
     var alertImg = document.createElement("img");
@@ -101,4 +38,31 @@ function renderColorPickers() {
         $('#color3label').removeClass('isHidden');
     }
 
+}
+
+function validateNumberInput(inputField) {
+    if(!/^[0-9]+$/.test(inputField.value)){
+        alert("Please only enter numeric characters (" + inputField.getAttribute("min") + " - " + inputField.getAttribute("max") + ")")
+        inputField.value = inputField.getAttribute("min")
+    }        
+    // multiplying by 1 to force comparison to be numeric not string
+    if(inputField.value*1 > inputField.getAttribute("max")*1){
+        alert("Maximum allowable value is " + inputField.getAttribute("max"))
+        inputField.value = inputField.getAttribute("max")
+    }        
+    if(inputField.value*1 < inputField.getAttribute("min")*1) {
+        alert("Minumum allowable value is " + inputField.getAttribute("min"))
+        inputField.value = inputField.getAttribute("min")
+    }
+}
+
+function toCanvasCoords(canvas, pageX, pageY) {
+    let rect = canvas.getBoundingClientRect();
+    let scale = rect.width / canvas.width;
+    pos = {
+        x: (pageX - rect.left) / scale,
+        y: (pageY - rect.top) / scale
+    }
+
+    return pos;
 }

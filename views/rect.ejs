@@ -1,5 +1,6 @@
 <%- include('partials/header') %>
 
+<script type="text/javascript" src="scripts/common.js"></script>
 <script type="text/javascript" src="scripts/rect.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
 
@@ -31,7 +32,6 @@
                 </div>
             </div>
         </div>
-        <!-- <form action="roundSettings" method="post"> -->
         <div class="form-group">
             <div class="my-3 p-3 bg-white rounded box-shadow  noPrint">
                 <!-- <input type="text" name="patternName" id="patternName" required>
@@ -46,22 +46,16 @@
 
                 <div class="row">
                     <div class="col">
-                        <input type="number" name = "nbrColors" id="nbrColors" required autofocus min="2" max="4">
+                        <input type="number" name = "nbrColors"    id="nbrColors"    required autofocus min="2"  max="4">
                         <label for="nbrColors">Number of Colors</label>
                     </div>
                     <div class="col">
-                        <input type="number" name = "baseStitches" id="baseStitches" required autofocus min="6" max="10" >
-                        <label for="baseStitches">Stitches in Round 1</label>
+                        <input type="number" name = "baseStitches" id="baseStitches" required autofocus min="20" max="100" >
+                        <label for="baseStitches">Stitches in Foundation Row</label>
                     </div>
                     <div class="col">
-                        <select class="form-select" name="stitchSize" id="stitchSize">
-                            <option value="10">Small</option>
-                            <option value="15">Medium</option>
-                            <option value="20">Large</option>
-                          </select>
-                          <label for="stitchSize">Stitch Size</label>
-                          <!-- <input type="number" name = "stitchSize" id="stitchSize" required autofocus min="6" max="20">
-                         -->
+                        <input type="number" name = "nbrRows"      id="nbrRows"      required autofocus min="20" max="100" >
+                        <label for="nbrRows">Rows</label>
                     </div>
                 </div>
 
@@ -136,8 +130,8 @@
             <p class="subtitle">Click on a stitch to indicate that it should drop down.</p>
             <canvas id="myCanvas"  class='img-responsive' width="1000" height="1000" style="border:1px solid #000000;"></canvas>
         </div>
-        <div class="my-3 p-3 bg-white rounded box-shadow" id="roundsListDiv">
-            <ul id="roundsList">
+        <div class="my-3 p-3 bg-white rounded box-shadow" id="rowsListDiv">
+            <ul id="rowsList">
             </ul>
         </div>
 
@@ -162,7 +156,7 @@
         <div class="alert alert-warning isHidden" role="alert"">
             <input type="number" name = "opBaseStitches" id="opBaseStitches" value="<%= pattern.baseStitchCount %>" >
             <input type="text" name = "opId" id="opId" value="<%= pattern._id %>" >
-            <input type="number" name = "opStitchSize" id="opStitchSize" value="<%= pattern.stitchSize %>" >
+            <input type="number" name = "opnbrRows" id="opnbrRows" value="<%= pattern.stitchSize %>" >
             <input type="text" name = "opDdStitches" id="opDdStitches" value="<%= pattern.ddStitches %>" >
             <input type="text" name = "opColors" id="opColors" value="<%= pattern.colors %>" >
             <input type="text" name = "opName" id="opName" value="<%= pattern.pattern %>" >

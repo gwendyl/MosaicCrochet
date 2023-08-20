@@ -10,12 +10,12 @@ const users = require('./users');
 const patternSchema = new mongoose.Schema(
     {   
         userEmail: String,
-        patternName: String,
+        patternType: {type: String, default: 'rnd'},
         baseStitchCount: Number,
         stitchSize: Number,
         colors: String,
         ddStitches: String,
-        pattern: String
+        pattern: String //name
     },
     {
         timestamps: true,
@@ -31,33 +31,39 @@ const patternSchema = new mongoose.Schema(
 /////////////////////////////
 exports.renderPatternList = async  (req, res, userMsg) => {
     if (!req.session.user) {
-        console.log('not authorized - renderPatternList');
         res.redirect('/login');
         return;
     }
 
-    var resultSet = await Pattern.find({userEmail: req.session.user});
+    var resultSet = await Pattern.find({userEmail: req.session.user, patternType: {$ne: "rct"}});
     var list = []
     resultSet.forEach(pattern => {
          list.push(pattern);        
     })    
 
-    res.render("patternlist", {userMsg:userMsg, is_auth: true, list:list})    
+    var resultSet = await Pattern.find({userEmail: req.session.user, patternType: "rct"});
+    var rectList = []
+    resultSet.forEach(pattern => {
+        rectList.push(pattern);        
+    })    
+
+    res.render("patternlist", {userMsg:userMsg, is_auth: true, list:list, rectList:rectList})    
 
 }
 
 exports.saveCurrentPattern = async (req, res, usermsg) => {
-
-    var foundPattern = await Pattern.findOne({userEmail: req.session.user, _id: req.body.id});
+    var foundPattern = await Pattern.findOne({userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t});
     if(foundPattern) {
         try {
-            await Pattern.updateOne({userEmail:req.session.user, _id:req.body.id}, 
+            await Pattern.updateOne({userEmail:req.session.user, patternType: req.body.tp, pattern:req.body.t}, 
                 {
+                    userEmail:req.session.user,
                     baseStitchCount: req.body.bq,
                     stitchSize: req.body.sz,
                     colors: req.body.ca,
                     ddStitches: req.body.dd,
-                    pattern: req.body.t
+                    pattern: req.body.t,
+                    PatternType: req.body.tp
                 });
         } catch (error) {
             console.log(error);
@@ -65,7 +71,6 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
 
     } else {
         try {
-
             foundPattern = await new Pattern({
                 userEmail: req.session.user,
                 baseStitchCount: req.body.bq,
@@ -73,6 +78,7 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                 colors: req.body.ca,
                 ddStitches: req.body.dd,
                 pattern: req.body.t,
+                patternType: req.body.tp,
                 createdAt: Date.now(),
             }).save();
             // establish session - I don't know if this is working yet
@@ -81,7 +87,6 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
         }
         
     } 
-    this.openPattern(req, res, "", foundPattern._id);
  }
 
  exports.deletePattern = async (req, res, usermsg) => {
@@ -100,7 +105,13 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
     if(!foundPattern) {
         this.renderPatternList(req, res, "Error - No Matching Pattern Found");
     }
-    this.renderRound(req,res,foundPattern);
+    if(foundPattern.patternType == 'rct'){
+        this.renderRect(req,res,foundPattern);
+    }
+    else {
+        this.renderRound(req,res,foundPattern);
+    }
+
  }
 
 

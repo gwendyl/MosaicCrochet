@@ -19,7 +19,7 @@ app.use(express.json({ limit: '300kb' }));
 app.use(
     session({
         secret: process.env.SESSIONSECRET,
-        cookie: { maxAge: 10 * 60 * 1000 },
+        cookie: { maxAge: 24 * 60 * 60 * 1000 }, //milliseconds
         resave: true,
         saveUninitialized: false,  // critical
     })
@@ -41,7 +41,6 @@ process.on("unhandledRejection", err => {
 /////////////////////////////////
 // routes
 /////////////////////////////////
-//app.get("/", function (req, res) {users.renderContent(req, res)});
 app.get("/", function (req, res) { users.renderHome(res,"")});
 app.get("/about", function (req, res) { users.renderAbout(res,"")});
 app.get("/resources", function (req, res) { users.renderResources(res,"")});
@@ -98,3 +97,4 @@ app.get("/openPattern", function(req,res) {
     patterns.openPattern(req, res, "", patternId);
 }
 );
+
