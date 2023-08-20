@@ -46,7 +46,8 @@ canvas {
 }
 
 body{
-  font-family: 'Montserrat Alternates', sans-serif;
+    padding-top: 120px; 
+    font-family: 'Montserrat Alternates', sans-serif;
 }
 
 h1{
