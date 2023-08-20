@@ -31,6 +31,19 @@ canvas {
   height: auto;
 }
 
+/* unvisited link */
+.afooter:link {
+  color: darkgray;
+}
+
+.afooter:visited {
+  color: darkgray;
+}
+
+/* mouse over link */
+.afooter:hover {
+  color: lightgray;
+}
 
 body{
   font-family: 'Montserrat Alternates', sans-serif;
@@ -83,8 +96,8 @@ h1{
   vertical-align: middle;
 }
 .copywrite {
-  padding-top: 20px;
-  color: lightgray;
+  
+  color: darkgray;
 }
 
 .subtitle {

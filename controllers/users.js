@@ -328,6 +328,7 @@ exports.renderAbout = (res, usermsg) => {
     res.render("about", {userMsg: usermsg, is_auth: false});
 }
 
+
 exports.renderResources = (res, usermsg) => {
     res.render("resources", {userMsg: usermsg, is_auth: false});
 }
