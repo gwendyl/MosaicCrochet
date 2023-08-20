@@ -442,8 +442,10 @@ document.addEventListener("DOMContentLoaded", function(){
         // if already a dd, clear 
         if (colorLowerStitch(stitch, !stitch.isDropDown)) {
             stitch.isDropDown = !stitch.isDropDown;
-            stitch.writtenInstruction = "dddc"
         };
+        if(stitch.isDropDown) stitch.writtenInstruction = "dddc";
+        else stitch.writtenInstruction = "blsc"
+
 
         // if should be symmetrical, find symmetry stitches and drop them too
         // if(createSymmetry() && recurseFlag) {
