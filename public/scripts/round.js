@@ -381,13 +381,23 @@ document.addEventListener("DOMContentLoaded", function(){
         // if already a dd, clear 
         if (colorLowerStitch(stitch, !stitch.isDropDown)) {
             stitch.isDropDown = !stitch.isDropDown;
+        };
+        
+        // fix written instructions
+        if (stitch.isDropDown) {
             if (stitch.isIncrease) {
                 stitch.writtenInstruction = "incDddc"
             } else {
                 stitch.writtenInstruction = "dddc"
             }
-        };
-
+        } else {
+            if (stitch.isIncrease) {
+                stitch.writtenInstruction = "incBlsc"
+            } else {
+                stitch.writtenInstruction = "blsc"
+            }
+        }
+                
         // if should be symmetrical, find symmetry stitches and drop them too
         if(createSymmetry() && recurseFlag) {
             // use mod to compute the symmetry group that are looking for
