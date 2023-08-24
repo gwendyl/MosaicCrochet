@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function(){
 
     //////////////////////////////////////////////////////
-    // if local storeage not initiated, default them
+    // if local storeage not initiated, default themwrite
     //////////////////////////////////////////////////////
     initializeLocalStorage();
 
@@ -276,14 +276,21 @@ document.addEventListener("DOMContentLoaded", function(){
         // note that pattern goes from right to left
         let originX = canvas.width;
         let originY = canvas.height; 
-        let squareW = canvas.width / baseStitchQty();
-        let squareH = canvas.height / nbrRows();   
-
+        let squareW = canvas.width / (baseStitchQty()*1+2);
+        let squareH = canvas.height / (nbrRows()*1 + 1);   
+        if (stitch.id < 10) console.log('using width of ' + squareW + ' and height of ' + squareH);
         // x position:  divide the ID value by the baseStitchQty and the remainder (mod) is how many stitches
         let pos = {
-            x: originX - squareW * ((stitch.id % baseStitchQty()+1)),
+            x: originX - squareW * (((stitch.id+1) % baseStitchQty())),
             y: originY - squareH * (stitch.rowId + 1)
         };
+
+        // shift right by 1 stitch to account for side panel of scs
+        // shift up (down?) by half a stitch to account for foundation row
+        if (stitch.id <10 ) console.log(stitch.id + ' being shifted from ' + pos.x + ', ' + pos.y + ' to ');
+        pos.x = pos.x - squareW;
+        pos.y = pos.y - (squareH / 2);
+        if (stitch.id < 10) console.log('            ' + pos.x + ', ' + pos.y)
         return pos;
     }
 
@@ -319,20 +326,22 @@ document.addEventListener("DOMContentLoaded", function(){
 
     function drawAllStitches() {
 
-            
-        let squareWidth = Math.min(1000/baseStitchQty(), 1000/nbrRows())
+        // need to add space for foundation row, finishing top row, and two side panels of scs
+        // side panels will be full stitch width.  Top and bottom rows will each be half of the height of a normal stitch.
+        let squareWidth = Math.min(canvas.width / (baseStitchQty()*1 + 2), canvas.height / (nbrRows()*1 + 1))
+
         // resize canvas so that stitches are always squares
-        canvas.setAttribute('width', squareWidth * baseStitchQty());
-        canvas.setAttribute('height', squareWidth * nbrRows());
+        canvas.setAttribute('width', squareWidth * (baseStitchQty()*1+2));
+        canvas.setAttribute('height', squareWidth * (nbrRows()*1+1));
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
 
-        let w = canvas.width / baseStitchQty();
-        let h = canvas.height / nbrRows();
-        console.log('height: ' + canvas.height + ' / ' + nbrRows() + ' = ' + h);
-
         // constant for all stitches
+        //let w = canvas.width / (baseStitchQty()+2);
+        //let h = canvas.height / (nbrRows()+1);
+        let w = squareWidth;
+        let h = squareWidth;
                 
         stitches.forEach(stitch => {
             // draw a little oval behind the stitch to indicate the base color of that row
@@ -511,6 +520,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
     function writeRowDetails() {
         addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rows earlier.", 'inc');
+        addInstrLine("sc = Single Crochet (US terminology)", 'sc');
         addInstrLine("blsc = Back-Loop Single Crochet (US terminology)", 'blsc');
         addInstrLine("dddc = Drop-Down Double Crochet (US terminology)", 'dddc');
         addInstrLine("ch = Chain", 'ch');
@@ -529,8 +539,10 @@ document.addEventListener("DOMContentLoaded", function(){
         let currInstr = "";
         let prevInstr = " ";
         let instrCount = 0;
+
+        // must have foundation row of chains in same color as R1
         if(row.id==0) {
-            rowInstr = 'R1: chain ' + row.stitchCount
+            rowInstr = 'Foundation row and R1: ' + row.stitchCount + ' x ch, plus an additional turning ch. Turn work. Starting in 2nd chain from hook, ' + row.stitchCount + ' x sc '
         } else {
 
             stitches.forEach(stitch => {
