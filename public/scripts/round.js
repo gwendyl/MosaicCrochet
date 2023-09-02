@@ -38,7 +38,6 @@ document.addEventListener("DOMContentLoaded", function(){
         constructStitches();
         reconstructFromLocal();
 
-    
        // saveLocally();
         drawAllStitches();
         //drawInCenter();
@@ -230,8 +229,26 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     function reconstructFromLocal(){
-        shortStitches().forEach(stitch => {
-            attemptDropDown(stitches[stitch], false);
+        shortStitches().forEach(stitchCode => {
+            // the fact that a stitch is referenced in 
+            // short stitches means that it drops down, so no N case
+            let ddType;
+            let stitchId = stitchCode+"";
+            if (stitchId.includes("X")) {
+                ddType = 'X';
+                stitchId = stitchId.substring(0,stitchId.length-1);
+            } else if (stitchId.includes("L")) {
+                ddType = 'L';
+                stitchId = stitchId.substring(0,stitchId.length-1);
+            } else if (stitchId.includes("R")) {
+                ddType = 'R';
+                stitchId = stitchId.substring(0,stitchId.length-1);
+            } else {
+                // Ns are not recorded, so if there is not an X, L, or R, then it is pattern that was created when there were only X type drop downs.  Treat as X 
+                ddType = 'X';
+            }
+            stitches[stitchId].ddType = ddType;            
+            // attemptDropDown(stitches[stitchId], false);
         })
     }
     function getParent(childId) {
@@ -280,7 +297,8 @@ document.addEventListener("DOMContentLoaded", function(){
             ctx.stroke();
             ctx.fill();
 
-            ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
+            // a stitch is never any other color, so can use base color here
+            ctx.fillStyle = colorsArrayWithHash()[stitch.baseColorId];
 
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -298,29 +316,64 @@ document.addEventListener("DOMContentLoaded", function(){
 
             ctx.lineWidth = 1;
 
-
-            if (showMarks()) {
-                // draw the line to its connected stitch
-                if (stitch.grandparentStitchId >= 0 && stitch.isDropDown) {
-                    let toPos = getIdCoords(stitch.grandparentStitchId);
-                    ctx.beginPath();
-                    ctx.moveTo(derivedLocation.x, derivedLocation.y);
-                    ctx.lineTo(toPos.x, toPos.y);
-                    ctx.stroke();
+            // what if, for each drop down, we actually created a column of yarn
+            if (stitch.grandparentStitchId >= 0 && (stitch.ddType != 'N')) {
+                let toStitch = stitch.grandparentStitchId;
+                if (stitch.ddType == "L") {
+                    toStitch--;
+                    // be careful that haven't crossed round number and dropped too low
+                    if (toStitch < 0 || (stitch.roundId-2 != stitches[toStitch].roundId)) {
+                        toStitch = toStitch + rounds[stitch.roundId-2].stitchCount;
+                    }
+                } else if (stitch.ddType == "R") {
+                    toStitch++;
+                    // be careful that haven't crossed round number and skipped up too high
+                    if ((stitch.roundId-2 != stitches[toStitch].roundId)) {
+                       toStitch = toStitch - rounds[stitch.roundId-2].stitchCount;
+                    }
                 }
+                let toPos = getIdCoords(toStitch);
+                let priorStrokeStyle = ctx.strokeStyle;
+                let priorStrokeWidth = ctx.lineWidth;
+                ctx.lineWidth = 2*radiusX;
+                ctx.strokeStyle = colorsArrayWithHash()[stitch.baseColorId];
+                ctx.beginPath();
+                ctx.moveTo(derivedLocation.x, derivedLocation.y);
+                ctx.lineTo(toPos.x, toPos.y);
+                ctx.stroke();
+                ctx.strokeStyle = priorStrokeStyle;
+                ctx.lineWidth = priorStrokeWidth;
             }
+
+            // always showing yarn, so no need to show black line for dd
+            // if (showMarks()) {
+            //     // draw the line to its connected stitch
+            //     if (stitch.grandparentStitchId >= 0 && (stitch.ddType != 'N')) {
+
+            //         // here we would have to look at the stitch DropDownTo value and shift left or right as appropriate.
+            //         let toStitch = stitch.grandparentStitchId;
+            //         if (stitch.ddType == "L") toStitch--;
+            //         if (stitch.ddType == "R") toStitch++;
+            //         let toPos = getIdCoords(toStitch);
+            //         ctx.beginPath();
+            //         ctx.moveTo(derivedLocation.x, derivedLocation.y);
+            //         ctx.lineTo(toPos.x, toPos.y);
+            //         ctx.stroke();
+            //     }
+            // }
 
             let currRound = getRound(stitch);
 
             if (stitch.id == currRound.firstStitchNbr && showMarks()) {
-                ctx.strokeText(currRound.humanId, derivedLocation.x, derivedLocation.y);
+                // cannot put in the middle of the circle because interferes with color detection
+                ctx.strokeText(currRound.humanId, derivedLocation.x + radiusX/2, derivedLocation.y + radiusY/2);
             }
             if (showNbrs) ctx.strokeText(stitch.id, derivedLocation.x, derivedLocation.y);
 
-            if (stitch.isDropDown && showMarks()) {
-                // ctx.strokeText('X', stitch.x, stitch.y);
-                ctx.strokeText('X', derivedLocation.x, derivedLocation.y);
-            }
+            // if ((stitch.ddType != 'N') && showMarks()) {
+            //     // ctx.strokeText('X', stitch.x, stitch.y);
+            //     ctx.strokeText('X', derivedLocation.x, derivedLocation.y);
+            // }
 
 
         })
@@ -365,7 +418,6 @@ document.addEventListener("DOMContentLoaded", function(){
             return false;
     }
 
-
     function attemptDropDown(stitch, recurseFlag) {
         // cannot drop down from first row
         if (stitch.roundId < startRound) {
@@ -374,22 +426,30 @@ document.addEventListener("DOMContentLoaded", function(){
         }
 
         // cannot dropp down if already dropped upon
-        if (stitch.currColorId != getBaseColorId(stitch.roundId)) {
+        // to determine if a stitch is already covered by yarn, check the color of the center of the stitch in the canvas
+        let derivedLocation = stitchLocation(stitch);
+        var pixelData = ctx.getImageData(derivedLocation.x, derivedLocation.y, 1, 1).data; 
+        let yarnColor = rgbToHex(pixelData[0], pixelData[1], pixelData[2]);
+        let baseColor = colorsArrayNoHash()[stitch.baseColorId]
+
+        if (hexColorDelta(yarnColor, baseColor)<.96){
             sendRoundInfoAlert('Stitch is already dropped upon.  Cannot itself drop down.');
             return;
         }
-        // if already a dd, clear 
-        if (colorLowerStitch(stitch, !stitch.isDropDown)) {
-            stitch.isDropDown = !stitch.isDropDown;
-        };
+
+        //attemptColorLowerStitch(stitch);
+        findDropDownLocation(stitch);
         
         // fix written instructions
-        if (stitch.isDropDown) {
+        if (stitch.ddType != 'N') {
+            // here we need additional instructions if looking to left or right
             if (stitch.isIncrease) {
                 stitch.writtenInstruction = "incDddc"
             } else {
                 stitch.writtenInstruction = "dddc"
             }
+            if (stitch.ddType == 'L') stitch.writtenInstr = stitch.writtenInstr + " (cc)";
+            if (stitch.ddType == 'R') stitch.writtenInstr = stitch.writtenInstr + " (c)";
         } else {
             if (stitch.isIncrease) {
                 stitch.writtenInstruction = "incBlsc"
@@ -418,33 +478,54 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
 
-    function colorLowerStitch(sourceStitch, ddBool) {
+    function findDropDownLocation(sourceStitch) {        
+        sourceStitch.ddType = nextDDPosition(sourceStitch.ddType);
+        return true;
+    }
+
+    function attemptColorLowerStitch(sourceStitch) {
         let success = false;
         let newColorId = getBaseColorId(sourceStitch.roundId);
-        stitches.forEach(stitch => {
-            if (stitch.id == sourceStitch.parentStitchId) {
-                if (stitch.isDropDown) {
-                    // cannot drop down on another drop down
-                    sendRoundInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
-                    success = false;
-                    return success;
-                }
+        let oldddType = sourceStitch.ddType;
+        let newddType;
 
-                //cannot be dropped on if already dropped on by another stitch
-                if (ddBool && (stitch.currColorId != getBaseColorId(stitch.roundId))) {
-                    sendRoundInfoAlert('Stitch cannot drop down onto a stitch that is already dropped onto by another stitch.');
-                    success = false;
-                    return success;
-                }
-                if (ddBool) {
-                    stitch.currColorId = newColorId;
-                }
-                else {
-                    stitch.currColorId = stitch.baseColorId;
-                }
+        let targetStitchId = sourceStitch.parentStitchId;
+        // if original drop
+        console.log('old type ' + oldddType + ' new type ' + nextDDPosition(oldddType));
+        newddType = nextDDPosition(oldddType);
+        switch (oldddType) {
+            case 'X': // moving from X to L
+                targetStitchId--;
+                //need to be careful that haven't dropped down a row
+                break;
+            case 'L': // moving from L to R
+                targetStitchId++;
+                break;
+            case 'R': // moving from R to N
+                targetStitchId = null;
                 success = true;
+                break;
+            default: // moving from N to X
+                targetStitchId = sourceStitch.parentStitchId;
+                
+        }
+
+        // first we attempt to drop down on the new stitch.  If successful, we will clear prior stitch.
+        console.log('looking for ddtype for target stitch id ' + targetStitchId);
+        if (newddType != 'N') {
+            if (stitches[targetStitchId].ddType != 'N') {
+                console.log('inside new if')
+                sendRoundInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
+                success = false;
+                return success;       
             }
-        })
+        }
+        success = true;
+   
+     
+
+        //update the source stitch with the new value for its drop down.
+        if (success) sourceStitch.ddType = newddType;
         return success;
     }
 
@@ -467,7 +548,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     function writeRoundDetails() {
-        addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rounds earlier.", 'inc');
         addInstrLine("Stitches in bold outline are recommended increase stitches.  They should be constructed in the same lower-round stitch as their immediate prior stitch.", 'dd');
         addInstrLine("blsc = Back-Loop Single Crochet (US terminology)", 'blsc');
         addInstrLine("incBlsc = Back-Loop Single Crochet - Increase (US terminology)", 'incblsc');
@@ -679,7 +759,6 @@ document.addEventListener("DOMContentLoaded", function(){
     
                 // reconstruct relevant information from saved shortStitches
                 let stitchColorId = currColorId;
-                let isDropDown = false;
       
                 stitches.push({
                     theta: theta * i,
@@ -689,7 +768,7 @@ document.addEventListener("DOMContentLoaded", function(){
                     roundId: j,
                     parentStitchId: parentStitchId,
                     grandparentStitchId: grandparentStitchId,
-                    isDropDown: isDropDown,
+                    ddType: 'N', // N means none.  x means drop directly down.  L means shift counter clockwise by one.  R means shift clockwise by 1
                     isIncrease: isIncrease,
                     writtenInstruction: writtenInstr
                 });
@@ -707,8 +786,9 @@ document.addEventListener("DOMContentLoaded", function(){
         // only save the stitches that have changed from default
         var ssTemp = [];
         stitches.forEach(stitch => {
-            if (stitch.isDropDown) {
-                ssTemp.push(stitch.id);
+            if (stitch.ddType != 'N') {
+                // here we would have to push the stitch number and either an X, L, or R next to it
+                ssTemp.push(stitch.id + stitch.ddType);
                 localStorage.setItem('sts', JSON.stringify(ssTemp));
             }
         })
@@ -734,6 +814,15 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 }); //document ready
 
+function nextDDPosition (startPosition) {
+    let ddTypes = ['X','L','R','N']
+    let nextPos;
+    for(i=0; i< ddTypes.length; i++) {
+        if (ddTypes[i] == startPosition) nextPos = i+1;
+    }
+    if (nextPos >= ddTypes.length) nextPos = 0;
+    return ddTypes[nextPos];
+}
 
 function initializeLocalStorage() {
     // first check to see if we were passed a pattern

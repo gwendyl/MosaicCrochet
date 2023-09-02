@@ -71,7 +71,6 @@ document.addEventListener("DOMContentLoaded", function(){
         
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
-                console.log('clicked on stitch ' + stitch.id)
                 attemptDropDown(stitch, true);
             }
         })
@@ -301,8 +300,6 @@ document.addEventListener("DOMContentLoaded", function(){
             currColorId++;
             if (currColorId >= nbrColors()) currColorId = 0;
         }
-        console.log("STITCHE");
-        console.log(stitches);
 }
 
     function stitchLocation(stitch) {
@@ -328,7 +325,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
     function reconstructFromLocal(){
         shortStitches().forEach(stitch => {
-            console.log('reconstructing dd for stitch ' + stitch) 
             attemptDropDown(stitches[stitch], false);
         })
     }
@@ -406,10 +402,8 @@ document.addEventListener("DOMContentLoaded", function(){
         /////////////////////////////////////////////
         // find row 0 color
         let topRowColor;
-        console.log('cycling through rows.  Current array length is ' + rows.length);
         rows.forEach(row => {
             if (row.id == rows.length - 1) {
-                console.log('pulling top rown color from row ' + row.id);
                 topRowColor = row.baseColorId;
             }
         })
@@ -540,20 +534,15 @@ document.addEventListener("DOMContentLoaded", function(){
             sendRowInfoAlert('Stitch is starting or ending column of single crochet stitches.  Cannot dropdown.');
             return;
         }
-        if (stitch.rowId < startRow) {
-            sendRowInfoAlert('Stitch is in first two rows.  Cannot dropdown.');
-            return;
-        }
 
-        // cannot dropp down if already dropped upon
-        if (stitch.currColorId != getBaseColorId(stitch.rowId)) {
-            sendRowInfoAlert('Stitch is already dropped upon.  Cannot itself drop down.');
-            return;
-        }
+        // // cannot dropp down if already dropped upon
+        // if (stitch.currColorId != getBaseColorId(stitch.rowId)) {
+        //     sendRowInfoAlert('Stitch is already dropped upon.  Cannot itself drop down.');
+        //     return;
+        // }
         // if already a dd, clear 
         if (colorLowerStitch(stitch, !stitch.isDropDown)) {
             stitch.isDropDown = !stitch.isDropDown;
-            console.log('marked stitch ' + stitch.id + 'with dd flag of ' + stitch.isDropDown)
         };
         if(stitch.isDropDown) stitch.writtenInstruction = "dddc";
         else stitch.writtenInstruction = "blsc"
@@ -584,13 +573,12 @@ document.addEventListener("DOMContentLoaded", function(){
         let newColorId = getBaseColorId(sourceStitch.rowId);
         stitches.forEach(stitch => {
             if (stitch.id == sourceStitch.parentStitchId) {
-                console.log('attempting to color (parent) stitch ' + stitch.id);
-                if (stitch.isDropDown) {
-                    // cannot drop down on another drop down
-                    sendRowInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
-                    success = false;
-                    return success;
-                }
+                // if (stitch.isDropDown) {
+                //     // cannot drop down on another drop down
+                //     sendRowInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
+                //     success = false;
+                //     return success;
+                // }
 
                 //cannot be dropped on if already dropped on by another stitch
                 if (ddBool && (stitch.currColorId != getBaseColorId(stitch.rowId))) {
