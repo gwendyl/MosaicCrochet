@@ -15,7 +15,7 @@ const patternSchema = new mongoose.Schema(
         stitchSize: Number,
         colors: String,
         ddStitches: String,
-        pattern: String //name
+        pattern: String,
     },
     {
         timestamps: true,
@@ -63,7 +63,7 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                     colors: req.body.ca,
                     ddStitches: req.body.dd,
                     pattern: req.body.t,
-                    PatternType: req.body.tp
+                    PatternType: req.body.tp,
                 });
         } catch (error) {
             console.log(error);
@@ -81,7 +81,6 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                 patternType: req.body.tp,
                 createdAt: Date.now(),
             }).save();
-            // establish session - I don't know if this is working yet
         } catch (error) {
             console.console.log(error);
         }

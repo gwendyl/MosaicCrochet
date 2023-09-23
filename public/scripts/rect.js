@@ -15,6 +15,8 @@ document.addEventListener("DOMContentLoaded", function(){
     $('#color1').val(colorsArrayWithHash()[1]);
     $('#color2').val(colorsArrayWithHash()[2]);
     $('#color3').val(colorsArrayWithHash()[3]);
+ 
+    
 
     
     // hard to drop down onto first circle or two
@@ -48,7 +50,8 @@ document.addEventListener("DOMContentLoaded", function(){
     $('#nbrColors')[0].addEventListener('change', (e) => {
         validateNumberInput($('#nbrColors')[0]);
         renderColorPickers();
-        resetChart();
+        resetColors();
+        //resetChart();
     });
 
     // $('#createSymmetry')[0].addEventListener('click', (e) => {
@@ -61,6 +64,7 @@ document.addEventListener("DOMContentLoaded", function(){
         else localStorage.setItem('rsh',  0);
         drawAllStitches();
     });
+
 
     canvas.addEventListener('click', (e) => {
         const pos = {
@@ -118,22 +122,22 @@ document.addEventListener("DOMContentLoaded", function(){
     
     let color0Field = document.getElementById('color0');
     color0Field.addEventListener("change", function() {
-        resetChart();
+        resetColors();
     });
     
     let color1Field = document.getElementById('color1');
     color1Field.addEventListener("change", function() {
-        resetChart();
+        resetColors();
     });
     
     let color2Field = document.getElementById('color2');
     color2Field.addEventListener("change", function() {
-        resetChart();
+        resetColors();
     });
     
     let color3Field = document.getElementById('color3');
     color3Field.addEventListener("change", function() {
-        resetChart();
+        resetColors();
     });
     
 
@@ -167,29 +171,7 @@ document.addEventListener("DOMContentLoaded", function(){
     
     let printButton = document.getElementById('printButton');
     printButton.addEventListener("click", function() {
-
         window.print();
-
-        // const dataUrl = canvas.toDataURL();
-
-        // let windowContent = '<!DOCTYPE html>';
-        // windowContent += '<html>';
-        // windowContent += '<head><title>Print canvas</title></head>';
-        // windowContent += '<body>';
-        // windowContent += '<img src="' + dataUrl + '">';
-        // windowContent += '</body>';
-        // windowContent += '</html>';
-
-        // const printWin = window.open('', '', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
-        // printWin.document.open();
-        // printWin.document.write(windowContent);
-
-        // printWin.document.addEventListener('load', function () {
-        //     printWin.focus();
-        //     printWin.print();
-        //     printWin.document.close();
-        //     printWin.close();
-        // }, true);
     });
 
 
@@ -243,8 +225,9 @@ document.addEventListener("DOMContentLoaded", function(){
             ///////////////////////////////////////
             stitches.push({
                 id: id,  //save
-                currColorId: currColorId,
-                baseColorId: currColorId,
+                //currColorId: currColorId,
+                //baseColorId: currColorId,
+                colorFrom: j,
                 rowId: j,
                 parentStitchId: id - (baseStitchQty()*1),
                 grandparentStitchId: getParent(id - (baseStitchQty()*1)),
@@ -264,13 +247,14 @@ document.addEventListener("DOMContentLoaded", function(){
                 let grandparentStitchId = getParent(parentStitchId);
 
                 // reconstruct relevant information from saved shortStitches
-                let stitchColorId = currColorId;
+                //let stitchColorId = currColorId;
                 let isDropDown = false;
       
                 stitches.push({
                     id: id,  //save
-                    currColorId: stitchColorId,
-                    baseColorId: stitchColorId,
+                    //currColorId: stitchColorId,
+                    //baseColorId: stitchColorId,
+                    colorFrom: j,
                     rowId: j,
                     parentStitchId: parentStitchId,
                     grandparentStitchId: grandparentStitchId,
@@ -287,8 +271,9 @@ document.addEventListener("DOMContentLoaded", function(){
             ///////////////////////////////////////
             stitches.push({
                 id: id,  //save
-                currColorId: currColorId,
-                baseColorId: currColorId,
+                //currColorId: currColorId,
+                //baseColorId: currColorId,
+                colorFrom: j,
                 rowId: j,
                 parentStitchId: id - baseStitchQty(),
                 grandparentStitchId: getParent(id - baseStitchQty()),
@@ -430,7 +415,8 @@ document.addEventListener("DOMContentLoaded", function(){
         // /////////////////////////////////////////////
                 
         stitches.forEach(stitch => {
-            ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
+            //ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
+            ctx.fillStyle = colorsArrayWithHash()[rows[stitch.colorFrom].baseColorId];
             ctx.beginPath();
             let derivedLocation = stitchLocation(stitch);
 
@@ -581,16 +567,19 @@ document.addEventListener("DOMContentLoaded", function(){
                 // }
 
                 //cannot be dropped on if already dropped on by another stitch
-                if (ddBool && (stitch.currColorId != getBaseColorId(stitch.rowId))) {
+                //if (ddBool && (stitch.currColorId != getBaseColorId(stitch.rowId))) {
+                if (ddBool && (stitch.colorFrom != stitch.rowId)) {
                     sendRowInfoAlert('Stitch cannot drop down onto a stitch that is already dropped onto by another stitch.');
                     success = false;
                     return success;
                 }
                 if (ddBool) {
-                    stitch.currColorId = newColorId;
+                    //stitch.currColorId = newColorId;
+                    stitch.colorFrom = sourceStitch.rowId;
                 }
                 else {
-                    stitch.currColorId = stitch.baseColorId;
+                    //stitch.currColorId = stitch.baseColorId;
+                    stitch.colorFrom = stitch.rowId;
                 }
                 success = true;
             }
@@ -779,7 +768,8 @@ document.addEventListener("DOMContentLoaded", function(){
             ca: localStorage.getItem('rca'),
             t:  patternName(),
             id: localStorage.getItem('rid'),
-            tp: 'rct'
+            tp: 'rct',
+            pb: localStorage.getItem('pb')
         })
         .then(function (response) {
             console.log(response);
@@ -791,9 +781,25 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
     function resetChart(){
+        resetColors();
         // update local storage with new values
         localStorage.setItem('rbq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 20);
         localStorage.setItem('rsz', $('#nbrRows').val()>0   ? $('#nbrRows').val()   : 20);
+
+        // must reset chart
+        stitches = [];
+        rows=[];
+        // let shortStitches = [];
+        localStorage.setItem('rsts', JSON.stringify([]));
+    
+        constructStitches();
+        drawAllStitches();
+        writeRowDetails();
+    }
+
+    function resetColors(){
+        console.log('reset colors called')
+        // update local storage with new values
         let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
         let colors = [];
         // JSON can't work with # signs, so store only the values
@@ -805,19 +811,14 @@ document.addEventListener("DOMContentLoaded", function(){
     
         localStorage.setItem('rca', JSON.stringify(colors));       
 
-        // must reset chart
-        stitches = [];
-        rows=[];
-        // let shortStitches = [];
-        localStorage.setItem('rsts', JSON.stringify([]));
+       rows.forEach(row => {
+            console.log('setting row ' + row.id + ' from ' + row.baseColorId);
+            row.baseColorId = row.id % nbrColors;
+            console.log('     to ' + row.baseColorId);
+        })
     
-        //saveLocally();
-    
-        constructStitches();
         drawAllStitches();
-        writeRowDetails();
-    
-    
+        writeRowDetails();    
     }
 }); //document ready
 
@@ -830,6 +831,7 @@ function initializeLocalStorage() {
     if ($('#opColors').length > 0) localStorage.setItem('rca', $('#opColors').val());
     if ($('#opName').length > 0) localStorage.setItem('rt', $('#opName').val());
     if ($('#opId').length > 0) localStorage.setItem('rid', $('#opId').val());
+    if ($('#oppb').length > 0) localStorage.setItem('pb', $('#oppb').val());
 
     // if we had a pattern, then
     if (!localStorage.getItem("rt")) localStorage.setItem("rp",0); else localStorage.setItem("rp",1);
@@ -840,6 +842,7 @@ function initializeLocalStorage() {
     let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
     if (!localStorage.getItem("rca"))  localStorage.setItem("rca",  JSON.stringify(defaultColors));
     if (!localStorage.getItem("rsts")) localStorage.setItem("rsts", JSON.stringify([]));
+    if (!localStorage.getItem("pb")) localStorage.setItem("pb",0);
     
 
 }

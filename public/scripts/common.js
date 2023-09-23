@@ -93,3 +93,4 @@ function hexColorDelta(hex1, hex2) {
     // 0 means opposite colors, 1 means same colors
     return (r + g + b) / 3;
 }
+
