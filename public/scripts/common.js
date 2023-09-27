@@ -37,7 +37,6 @@ function renderColorPickers() {
         $('#color3').removeClass('isHidden');
         $('#color3label').removeClass('isHidden');
     }
-
 }
 
 function validateNumberInput(inputField) {
@@ -68,11 +67,16 @@ function toCanvasCoords(canvas, pageX, pageY) {
 }
 
 function rgbToHex(r, g, b) {
+    // THANKS CHAT GPT
     if (r > 255 || g > 255 || b > 255)
         throw "Invalid color component";
-    return ((r << 16) | (g << 8) | b).toString(16);
-}
+    
+    const redHex = r.toString(16).padStart(2, '0');
+    const greenHex = g.toString(16).padStart(2, '0');
+    const blueHex = b.toString(16).padStart(2, '0');
 
+    return redHex + greenHex + blueHex;
+}
 function hexColorDelta(hex1, hex2) {
     // get red/green/blue int values of hex1
     var r1 = parseInt(hex1.substring(0, 2), 16);

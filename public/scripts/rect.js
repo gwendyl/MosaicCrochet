@@ -41,9 +41,7 @@ document.addEventListener("DOMContentLoaded", function(){
         reconstructFromLocal();
 
     
-       // saveLocally();
-       drawAllStitches();
-        //drawInCenter();
+        drawAllStitches();
         writeRowDetails();
     }
 
@@ -54,17 +52,13 @@ document.addEventListener("DOMContentLoaded", function(){
         //resetChart();
     });
 
-    // $('#createSymmetry')[0].addEventListener('click', (e) => {
-    //     if ($('#createSymmetry')[0].checked) localStorage.setItem('sy',  1)
-    //     else localStorage.setItem('sy',  0);
-    // });
-
     $('#showMarks')[0].addEventListener('click', (e) => {
         if ($('#showMarks')[0].checked) localStorage.setItem('rsh',  1)
         else localStorage.setItem('rsh',  0);
         drawAllStitches();
     });
 
+    // var menuNode = document.getElementById('menu');
 
     canvas.addEventListener('click', (e) => {
         const pos = {
@@ -75,6 +69,24 @@ document.addEventListener("DOMContentLoaded", function(){
         
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
+                // if(stitch.writtenInstruction == "sc"){
+                //     console.log('sc clicked on row ' + stitch.rowId);
+                //     // create pop up menu here
+                //     let humanId = stitch.rowId + 1;
+                //     $("#pulse-button").html('Pulse ' + humanId);
+                //     // $("#btnAddProfile").html('Save');
+                //     $("#delete-button").html('Delete ' + humanId);
+
+                //     menuNode.style.display = 'block';
+                //     var containerRect = canvas.getBoundingClientRect();
+            
+                //     menuNode.style.left =
+                //       containerRect.left + pos.x + 4 + "px";
+                //     menuNode.style.top =
+                //       containerRect.top + pos.y + 4 + "px";
+            
+                //     return;
+                // }
                 attemptDropDown(stitch, true);
             }
         })
@@ -139,23 +151,12 @@ document.addEventListener("DOMContentLoaded", function(){
     color3Field.addEventListener("change", function() {
         resetColors();
     });
-    
-
-    // localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
-    // let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
-    // let colors = [];
-    // // JSON can't work with # signs, so store only the values
-    
-    // colors.push($('#color0').val().slice(1));
-    // colors.push($('#color1').val().slice(1));
-
 
     let saveButton = document.getElementById('saveButton');
     saveButton.addEventListener("click", function() {
-
         saveNow();
-
     });
+
     let randomizeButton = document.getElementById('randomize');
     randomizeButton.addEventListener("click", function() {
         createRandomPattern();
@@ -313,6 +314,7 @@ document.addEventListener("DOMContentLoaded", function(){
             attemptDropDown(stitches[stitch], false);
         })
     }
+
     function getParent(childId) {
         let parentStitchId;
         stitches.forEach(stitch => {
@@ -321,16 +323,6 @@ document.addEventListener("DOMContentLoaded", function(){
             }
         })
         return parentStitchId;
-    }
-
-    function getBaseColorId(rowId) {
-        let baseColorId;
-        rows.forEach(row => {
-            if (row.id == rowId) {
-                baseColorId = row.baseColorId;
-            }
-        })
-        return baseColorId;
     }
 
     function clearCanvas() {
@@ -360,10 +352,7 @@ document.addEventListener("DOMContentLoaded", function(){
         // foundation row 
         /////////////////////////////////////////////
         // find row 0 color
-        let row0color;
-        rows.forEach(row => {
-            if (row.id == 0) row0color = row.baseColorId;
-        })
+        let row0color = rows[0].baseColorId;
 
         let startingY = canvas.height - h/2;
 
@@ -385,13 +374,7 @@ document.addEventListener("DOMContentLoaded", function(){
         /////////////////////////////////////////////
         // finishing row 
         /////////////////////////////////////////////
-        // find row 0 color
-        let topRowColor;
-        rows.forEach(row => {
-            if (row.id == rows.length - 1) {
-                topRowColor = row.baseColorId;
-            }
-        })
+        let topRowColor = rows[rows.length -1].baseColorId;
 
         startingY = 0;
 
@@ -415,8 +398,12 @@ document.addEventListener("DOMContentLoaded", function(){
         // /////////////////////////////////////////////
                 
         stitches.forEach(stitch => {
+            ////////////////////////////
+            // fill in current stitch
+            ////////////////////////////
             //ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
-            ctx.fillStyle = colorsArrayWithHash()[rows[stitch.colorFrom].baseColorId];
+            // no longer deriving color from above... always use own color and drop down instead
+            ctx.fillStyle = colorsArrayWithHash()[rows[stitch.rowId].baseColorId];
             ctx.beginPath();
             let derivedLocation = stitchLocation(stitch);
 
@@ -424,7 +411,22 @@ document.addEventListener("DOMContentLoaded", function(){
             ctx.stroke();
             ctx.fill();
 
-
+            // what if, for each drop down, we actually created a column of yarn
+            if (stitch.isDropDown) {
+                let toStitch = stitch.grandparentStitchId;
+                let toPos = getIdCoords(toStitch);                
+                let priorStrokeStyle = ctx.strokeStyle;
+                let priorStrokeWidth = ctx.lineWidth;
+                ctx.lineWidth = w;
+                ctx.strokeStyle = ctx.fillStyle;
+                ctx.strokeStyle = '#fffff';
+                ctx.beginPath();
+                ctx.moveTo(derivedLocation.x + w/2, derivedLocation.y);
+                ctx.lineTo(toPos.x + w/2, toPos.y);
+                ctx.stroke();
+                ctx.strokeStyle = priorStrokeStyle;
+                ctx.likeWidth = priorStrokeWidth;
+            }
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.lineWidth = 1;
@@ -440,7 +442,7 @@ document.addEventListener("DOMContentLoaded", function(){
                 }
             }
 
-            let currRow = getRow(stitch);
+            let currRow = rows[stitch.rowId];
 
             if (stitch.id == currRow.firstStitchNbr && showMarks()) {
                 ctx.strokeText(currRow.humanId, derivedLocation.x + (3*w/4), derivedLocation.y + (3*h/4));
@@ -471,23 +473,6 @@ document.addEventListener("DOMContentLoaded", function(){
         })
         return pos;
     };
-
-    // function drawStartingRow() {
-    //     originX = 0;
-    //     originY = canvas.height;    
-    //     h = canvas.height - (canvas.height / nbrRows());
-
-    //     ctx.fillStyle = "rgba(255, 255, 255, 0.125)";
-    //     ctx.fillStyle = colorsArrayWithHash()[3];
-
-
-    //     ctx.beginPath();
-    //     ctx.rect(200, 200, 100,100);
-    //     ctx.stroke();
-    //     ctx.fill();
-
-
-    // }
 
     function isIntersect(point, stitch) {
         let stitchW = canvas.width / baseStitchQty();
@@ -556,18 +541,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
     function colorLowerStitch(sourceStitch, ddBool) {
         let success = false;
-        let newColorId = getBaseColorId(sourceStitch.rowId);
         stitches.forEach(stitch => {
             if (stitch.id == sourceStitch.parentStitchId) {
-                // if (stitch.isDropDown) {
-                //     // cannot drop down on another drop down
-                //     sendRowInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
-                //     success = false;
-                //     return success;
-                // }
-
                 //cannot be dropped on if already dropped on by another stitch
-                //if (ddBool && (stitch.currColorId != getBaseColorId(stitch.rowId))) {
                 if (ddBool && (stitch.colorFrom != stitch.rowId)) {
                     sendRowInfoAlert('Stitch cannot drop down onto a stitch that is already dropped onto by another stitch.');
                     success = false;
@@ -586,18 +562,6 @@ document.addEventListener("DOMContentLoaded", function(){
         })
         return success;
     }
-
-    function getRow(stitch) {
-        let foundRow;
-
-        rows.forEach(row => {
-            if (stitch.rowId == row.id)
-                foundRow = row;
-        })
-        return foundRow;
-    }
-
-
 
     function writeRowDetails() {
         addInstrLine("When the 'Show Stitch Marks' option is turned on, the 'x' marks indicate stitches that should drop down to the exposed front loop two rows earlier.", 'inc');
@@ -706,37 +670,6 @@ document.addEventListener("DOMContentLoaded", function(){
         if (li) ul.removeChild(li);
     }
 
-    // function resizeCanvas(canvas) {
-    //     var parent = canvas.parentElement;
-
-    //     canvas.width = parent.offsetWidth;
-    //     canvas.height = "auto";
-    // }
-
-    function renderColorPickers() {
-        // color 1 always rendered
-        // color 2 always rendered
-
-        let nbrColorElement = $('#nbrColors')[0];
-
-        if (nbrColorElement.value < 3) {
-            $('#color2').addClass('isHidden');
-            $('#color2label').addClass('isHidden');
-            $('#color3').addClass('isHidden');
-            $('#color3label').addClass('isHidden');
-        } else if (nbrColorElement.value < 4) {
-            $('#color2').removeClass('isHidden');
-            $('#color2label').removeClass('isHidden');
-            $('#color3').addClass('isHidden');
-            $('#color3label').addClass('isHidden');
-        } else {
-            $('#color2').removeClass('isHidden');
-            $('#color2label').removeClass('isHidden');
-            $('#color3').removeClass('isHidden');
-            $('#color3label').removeClass('isHidden');
-        }
-
-    }
 
     function sendRowInfoAlert(textMsg) {
         if(!showErrors) return;
@@ -744,9 +677,43 @@ document.addEventListener("DOMContentLoaded", function(){
         sendInfoAlert(textMsg, errorDiv);
     }
 
+    function resetChart(){
+        resetColors();
+        // update local storage with new values
+        localStorage.setItem('rbq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 20);
+        localStorage.setItem('rsz', $('#nbrRows').val()>0   ? $('#nbrRows').val()   : 20);
 
+        // must reset chart
+        stitches = [];
+        rows=[];
+        // let shortStitches = [];
+        localStorage.setItem('rsts', JSON.stringify([]));
+    
+        constructStitches();
+        drawAllStitches();
+        writeRowDetails();
+    }
 
+    function resetColors(){
+        // update local storage with new values
+        let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
+        let colors = [];
+        // JSON can't work with # signs, so store only the values
+        
+        colors.push($('#color0').val().slice(1));
+        colors.push($('#color1').val().slice(1));
+        if (nbrColors > 2) colors.push($('#color2').val().slice(1));
+        if (nbrColors > 3) colors.push($('#color3').val().slice(1));
+    
+        localStorage.setItem('rca', JSON.stringify(colors));       
 
+       rows.forEach(row => {
+            row.baseColorId = row.id % nbrColors;
+        })
+    
+        drawAllStitches();
+        writeRowDetails();    
+    }
 
     function saveNow() {
         // only save the stitches that have changed from default
@@ -779,47 +746,15 @@ document.addEventListener("DOMContentLoaded", function(){
         });
     }
 
+    // document.getElementById('delete-button').addEventListener('click', () => {
+    //     let rowNbr = $("#delete-button").html();
+    //     rowNbr = rowNbr.replace(/\D/g,'') - 1;
+    // });
+    // const pulseButton = document.getElementById('pulse-button')
+    // pulseButton.addEventListener('click', () => {
+    //     console.log("pulse clicked");
+    // });
 
-    function resetChart(){
-        resetColors();
-        // update local storage with new values
-        localStorage.setItem('rbq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 20);
-        localStorage.setItem('rsz', $('#nbrRows').val()>0   ? $('#nbrRows').val()   : 20);
-
-        // must reset chart
-        stitches = [];
-        rows=[];
-        // let shortStitches = [];
-        localStorage.setItem('rsts', JSON.stringify([]));
-    
-        constructStitches();
-        drawAllStitches();
-        writeRowDetails();
-    }
-
-    function resetColors(){
-        console.log('reset colors called')
-        // update local storage with new values
-        let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
-        let colors = [];
-        // JSON can't work with # signs, so store only the values
-        
-        colors.push($('#color0').val().slice(1));
-        colors.push($('#color1').val().slice(1));
-        if (nbrColors > 2) colors.push($('#color2').val().slice(1));
-        if (nbrColors > 3) colors.push($('#color3').val().slice(1));
-    
-        localStorage.setItem('rca', JSON.stringify(colors));       
-
-       rows.forEach(row => {
-            console.log('setting row ' + row.id + ' from ' + row.baseColorId);
-            row.baseColorId = row.id % nbrColors;
-            console.log('     to ' + row.baseColorId);
-        })
-    
-        drawAllStitches();
-        writeRowDetails();    
-    }
 }); //document ready
 
 function initializeLocalStorage() {
@@ -887,82 +822,19 @@ function shortStitches() {
     return JSON.parse(localStorage.getItem('rsts'));
 }
 
-/// needs to be moved to a shared file
-function sendInfoAlert(textMsg, toDiv) {
-    var alertImg = document.createElement("img");
-    alertImg.setAttribute('src', "close.soon");
-    alertImg.setAttribute('style', "display:none");
-    alertImg.setAttribute('onerror', "(function(el){ setTimeout(function(){ $(el).parent().remove(); },2000 ); })(this);");
+// /// needs to be moved to a shared file
+// function sendInfoAlert(textMsg, toDiv) {
+//     var alertImg = document.createElement("img");
+//     alertImg.setAttribute('src', "close.soon");
+//     alertImg.setAttribute('style', "display:none");
+//     alertImg.setAttribute('onerror', "(function(el){ setTimeout(function(){ $(el).parent().remove(); },2000 ); })(this);");
 
-    let textNode = document.createTextNode(textMsg);
-    var alertDiv = document.createElement("div");
-    let divClass = "alert alert-dark overlay";
-    alertDiv.setAttribute('class', divClass);
-    alertDiv.appendChild(textNode);
-    alertDiv.appendChild(alertImg);
+//     let textNode = document.createTextNode(textMsg);
+//     var alertDiv = document.createElement("div");
+//     let divClass = "alert alert-dark overlay";
+//     alertDiv.setAttribute('class', divClass);
+//     alertDiv.appendChild(textNode);
+//     alertDiv.appendChild(alertImg);
 
-    toDiv.appendChild(alertDiv);
-}
-
-// function initializeLocalStorage() {
-//     // first check to see if we were passed a pattern
-//     localStorage.clear();
-//     if ($('#opBaseStitches').length > 0) localStorage.setItem('rbq', $('#opBaseStitches').val());
-//     if ($('#opnbrRows').length > 0) localStorage.setItem('rsz', $('#opnbrRows').val());
-//     if ($('#opDdStitches').length > 0) localStorage.setItem('rsts', $('#opDdStitches').val());
-//     if ($('#opColors').length > 0) localStorage.setItem('rca', $('#opColors').val());
-//     if ($('#opName').length > 0) localStorage.setItem('rt', $('#opName').val());
-//     if ($('#opId').length > 0) localStorage.setItem('rid', $('#opId').val());
-
-//     // if we had a pattern, then
-//     if (!localStorage.getItem("rt")) localStorage.setItem("rp",0); else localStorage.setItem("rp",1);
-
-//     if (!localStorage.getItem("rt")) localStorage.setItem("rt","Draft Pattern");
-//     if (!localStorage.getItem("rbq")) localStorage.setItem("rbq",20);
-//     if (!localStorage.getItem("rsz")) localStorage.setItem("rsz",20);
-//     let defaultColors = ["9b4f3f","FFFFFF","D4AF37"];
-//     if (!localStorage.getItem("rca"))  localStorage.setItem("rca",  JSON.stringify(defaultColors));
-//     if (!localStorage.getItem("rsts")) localStorage.setItem("rsts", JSON.stringify([]));
-    
-
-// }
-
-// easier access to local variables
-// function colorsArrayNoHash() {
-//     return JSON.parse(localStorage.getItem('rca'));
-// }
-// function colorsArrayWithHash() {
-//     let initialArray = JSON.parse(localStorage.getItem('rca'));
-//     var finalArray = [];
-//     for(i=0; i< initialArray.length; i++) {
-//         finalArray.push('#'+initialArray[i]);
-//     }
-//     return finalArray;
-// }
-
-
-// function nbrColors() {
-//     return colorsArrayWithHash().length;
-// }
-// function showMarks() {
-//     if (localStorage.getItem('rsh') == 0) return false;
-//     return true;
-// }
-
-// function createSymmetry() {
-//     if (localStorage.getItem('rsy') == 0) return false;
-//     return true;
-// }
-
-// function baseStitchQty() {
-//     return localStorage.getItem('rbq');
-// }
-// function patternName() {
-//     return localStorage.getItem('rt');
-// }
-// function nbrRows() {
-//     return localStorage.getItem('rsz');
-// }
-// function shortStitches() {
-//     return JSON.parse(localStorage.getItem('rsts'));
+//     toDiv.appendChild(alertDiv);
 // }

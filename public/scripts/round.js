@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function(){
     // show numbers on stitches.  Useful for debugging
     let showNbrs = false;
 
-    let randomThreshold = .1;
+    let randomThreshold = .05; // lower number is less likely to hit
     let showErrors = true;
 
     let canvas = $('#myCanvas')[0];
@@ -37,9 +37,7 @@ document.addEventListener("DOMContentLoaded", function(){
         constructStitches();
         reconstructFromLocal();
 
-       // saveLocally();
         drawAllStitches();
-        //drawInCenter();
         writeRoundDetails();
     }
 
@@ -133,23 +131,12 @@ document.addEventListener("DOMContentLoaded", function(){
     color3Field.addEventListener("change", function() {
         resetColors();
     });
-    
-
-    // localStorage.setItem('sz', $('#stitchSize').val()>0   ? $('#stitchSize').val()   : 10);
-    // let nbrColors     = $('#nbrColors').val()>0    ? $('#nbrColors').val()    : 3; 
-    // let colors = [];
-    // // JSON can't work with # signs, so store only the values
-    
-    // colors.push($('#color0').val().slice(1));
-    // colors.push($('#color1').val().slice(1));
-
 
     let saveButton = document.getElementById('saveButton');
     saveButton.addEventListener("click", function() {
-
         saveNow();
-
     });
+
     let randomizeButton = document.getElementById('randomize');
     randomizeButton.addEventListener("click", function() {
         createRandomPattern();
@@ -165,29 +152,7 @@ document.addEventListener("DOMContentLoaded", function(){
     
     let printButton = document.getElementById('printButton');
     printButton.addEventListener("click", function() {
-
         window.print();
-
-        // const dataUrl = canvas.toDataURL();
-
-        // let windowContent = '<!DOCTYPE html>';
-        // windowContent += '<html>';
-        // windowContent += '<head><title>Print canvas</title></head>';
-        // windowContent += '<body>';
-        // windowContent += '<img src="' + dataUrl + '">';
-        // windowContent += '</body>';
-        // windowContent += '</html>';
-
-        // const printWin = window.open('', '', 'width=' + screen.availWidth + ',height=' + screen.availHeight);
-        // printWin.document.open();
-        // printWin.document.write(windowContent);
-
-        // printWin.document.addEventListener('load', function () {
-        //     printWin.focus();
-        //     printWin.print();
-        //     printWin.document.close();
-        //     printWin.close();
-        // }, true);
     });
 
 
@@ -209,6 +174,91 @@ document.addEventListener("DOMContentLoaded", function(){
             }
         })
         showErrors = true;
+    }
+
+    function constructStitches() {
+    
+        // originX = canvas.getBoundingClientRect().width / 2;
+        // originY = canvas.getBoundingClientRect().height / 2;    
+        originX = canvas.width / 2;
+        originY = canvas.height / 2;    
+        let ss = [];
+    
+        // constant for all stitches
+        let startingX = originX;
+        let id = 0;
+        let currColorId = 0;
+        let rndCount = Math.min(canvas.width / (4 * stitchSize()) - 1, canvas.height / (4 * stitchSize()) - 1);
+    
+        for (let j = 0; j < rndCount; j++) {
+       
+            let currentRound = {
+                id: j,
+                humanId: j + 1,
+                stitchCount: baseStitchQty() * (j + 1),
+                baseColorId: currColorId,
+                firstStitchNbr: id
+            }
+            rounds.push(currentRound);
+    
+            let theta = (2 * Math.PI / currentRound.stitchCount);
+            // let startingY = originY + 2 * radiusY * (j + 1);
+            for (let i = 0; i < currentRound.stitchCount; i++) {
+    
+                // let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
+                // let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
+    
+                // let newX = 0 - Math.sin(i * theta) * (startingY - originY) + originX;
+                // let newY = Math.cos(i * theta) * (startingY - originY) + originY;
+    
+    
+                // determine the lower stitch that it will build upon
+                // increment: account for the extra stitch 
+                let nbrOfStitchesFromFirstStitch = id - currentRound.firstStitchNbr + 1;
+                let increment = nbrOfStitchesFromFirstStitch * (1 / (j + 1));
+    
+                // drop down stitch = current stitch number + the number of stitches around + 
+                // the incremental amount to increase the stitch count for the next row
+                var parentStitchId;
+                let rawStitchNbr = id - j * baseStitchQty() - increment;
+                if (j > 0) parentStitchId = Math.round(rawStitchNbr);
+    
+    
+                let isIncrease = false;
+                let writtenInstr = "blsc"
+                if (Math.floor(rawStitchNbr) == rawStitchNbr) {
+                    isIncrease = true;
+                    writtenInstr = "incBlsc"
+                }
+    
+                // find the 'grandmother' of the stitch.  this is the stitch that this stitch would drop down to
+                // we just found the parentStitchId, which is this stitch's mother.  So just need to get the parentStitchId of the parentStitchId.
+                let grandparentStitchId = getParent(parentStitchId);
+    
+                // reconstruct relevant information from saved shortStitches
+                //let stitchColorId = currColorId;
+      
+                stitches.push({
+                    theta: theta * i,
+                    id: id,  //save
+                    //currColorId: stitchColorId,
+                    //baseColorId: stitchColorId,
+                    colorFrom: j,
+                    roundId: j,
+                    parentStitchId: parentStitchId,
+                    grandparentStitchId: grandparentStitchId,
+                    ddType: 'N', // N means none.  x means drop directly down.  L means shift counter clockwise by one.  R means shift clockwise by 1
+                    isIncrease: isIncrease,
+                    writtenInstruction: writtenInstr
+                });
+    
+                // prep for next cycle
+                id++;
+            }
+    
+            currColorId++;
+            if (currColorId >= nbrColors()) currColorId = 0;
+        }
     }
 
     function stitchLocation(stitch) {
@@ -250,6 +300,7 @@ document.addEventListener("DOMContentLoaded", function(){
             // attemptDropDown(stitches[stitchId], false);
         })
     }
+
     function getParent(childId) {
         let parentStitchId;
         stitches.forEach(stitch => {
@@ -494,7 +545,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
         let targetStitchId = sourceStitch.parentStitchId;
         // if original drop
-        console.log('old type ' + oldddType + ' new type ' + nextDDPosition(oldddType));
+        ('old type ' + oldddType + ' new type ' + nextDDPosition(oldddType));
         newddType = nextDDPosition(oldddType);
         switch (oldddType) {
             case 'X': // moving from X to L
@@ -514,10 +565,8 @@ document.addEventListener("DOMContentLoaded", function(){
         }
 
         // first we attempt to drop down on the new stitch.  If successful, we will clear prior stitch.
-        console.log('looking for ddtype for target stitch id ' + targetStitchId);
         if (newddType != 'N') {
             if (stitches[targetStitchId].ddType != 'N') {
-                console.log('inside new if')
                 sendRoundInfoAlert('Stitch cannot drop down onto a stitch that is itself dropping down.');
                 success = false;
                 return success;       
@@ -658,14 +707,6 @@ document.addEventListener("DOMContentLoaded", function(){
         if (li) ul.removeChild(li);
     }
 
-    // function resizeCanvas(canvas) {
-    //     var parent = canvas.parentElement;
-
-    //     canvas.width = parent.offsetWidth;
-    //     canvas.height = "auto";
-    // }
-
-
     function sendRoundInfoAlert(textMsg) {
         if(!showErrors) return;
         var errorDiv = document.getElementById('errorDiv');
@@ -702,9 +743,7 @@ document.addEventListener("DOMContentLoaded", function(){
         localStorage.setItem('ca', JSON.stringify(colors));        
     
         rounds.forEach(round => {
-            console.log('setting round ' + round.id + ' from ' + round.baseColorId);
             round.baseColorId = round.id % nbrColors;
-            console.log('     to ' + round.baseColorId);
         })
 
         //constructStitches();
@@ -712,91 +751,7 @@ document.addEventListener("DOMContentLoaded", function(){
         writeRoundDetails();    
     }
 
-    function constructStitches() {
-    
-        // originX = canvas.getBoundingClientRect().width / 2;
-        // originY = canvas.getBoundingClientRect().height / 2;    
-        originX = canvas.width / 2;
-        originY = canvas.height / 2;    
-        let ss = [];
-    
-        // constant for all stitches
-        let startingX = originX;
-        let id = 0;
-        let currColorId = 0;
-        let rndCount = Math.min(canvas.width / (4 * stitchSize()) - 1, canvas.height / (4 * stitchSize()) - 1);
-    
-        for (let j = 0; j < rndCount; j++) {
-       
-            let currentRound = {
-                id: j,
-                humanId: j + 1,
-                stitchCount: baseStitchQty() * (j + 1),
-                baseColorId: currColorId,
-                firstStitchNbr: id
-            }
-            rounds.push(currentRound);
-    
-            let theta = (2 * Math.PI / currentRound.stitchCount);
-            // let startingY = originY + 2 * radiusY * (j + 1);
-            for (let i = 0; i < currentRound.stitchCount; i++) {
-    
-                // let newX = Math.cos(i * theta) * (startingX - originX) - Math.sin(i * theta) * (startingY - originY) + originX;
-                // let newY = Math.sin(i * theta) * (startingX - originX) + Math.cos(i * theta) * (startingY - originY) + originY;
-    
-                // let newX = 0 - Math.sin(i * theta) * (startingY - originY) + originX;
-                // let newY = Math.cos(i * theta) * (startingY - originY) + originY;
-    
-    
-                // determine the lower stitch that it will build upon
-                // increment: account for the extra stitch 
-                let nbrOfStitchesFromFirstStitch = id - currentRound.firstStitchNbr + 1;
-                let increment = nbrOfStitchesFromFirstStitch * (1 / (j + 1));
-    
-                // drop down stitch = current stitch number + the number of stitches around + 
-                // the incremental amount to increase the stitch count for the next row
-                var parentStitchId;
-                let rawStitchNbr = id - j * baseStitchQty() - increment;
-                if (j > 0) parentStitchId = Math.round(rawStitchNbr);
-    
-    
-                let isIncrease = false;
-                let writtenInstr = "blsc"
-                if (Math.floor(rawStitchNbr) == rawStitchNbr) {
-                    isIncrease = true;
-                    writtenInstr = "incBlsc"
-                }
-    
-                // find the 'grandmother' of the stitch.  this is the stitch that this stitch would drop down to
-                // we just found the parentStitchId, which is this stitch's mother.  So just need to get the parentStitchId of the parentStitchId.
-                let grandparentStitchId = getParent(parentStitchId);
-    
-                // reconstruct relevant information from saved shortStitches
-                //let stitchColorId = currColorId;
-      
-                stitches.push({
-                    theta: theta * i,
-                    id: id,  //save
-                    //currColorId: stitchColorId,
-                    //baseColorId: stitchColorId,
-                    colorFrom: j,
-                    roundId: j,
-                    parentStitchId: parentStitchId,
-                    grandparentStitchId: grandparentStitchId,
-                    ddType: 'N', // N means none.  x means drop directly down.  L means shift counter clockwise by one.  R means shift clockwise by 1
-                    isIncrease: isIncrease,
-                    writtenInstruction: writtenInstr
-                });
-    
-                // prep for next cycle
-                id++;
-            }
-    
-            currColorId++;
-            if (currColorId >= nbrColors()) currColorId = 0;
-        }
-    }
-    
+   
     function saveNow() {
         // only save the stitches that have changed from default
         var ssTemp = [];
