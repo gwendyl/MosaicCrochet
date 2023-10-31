@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $('#color2').val(colorsArrayWithHash()[2]);
     $('#color3').val(colorsArrayWithHash()[3]);
  
-    
 
     
     // hard to drop down onto first circle or two
@@ -30,6 +29,10 @@ document.addEventListener("DOMContentLoaded", function(){
     let canvas = $('#myCanvas')[0];
     let ctx = canvas.getContext("2d");
 
+    // capture initial canvas size 
+    let initCanvasWidth  = canvas.width;
+    let initCanvasHeight = canvas.height;
+
     // compute maxiumum number of stitches that will fit
     let rows = [];
     let stitches = [];
@@ -40,7 +43,6 @@ document.addEventListener("DOMContentLoaded", function(){
         constructStitches();
         reconstructFromLocal();
 
-    
         drawAllStitches();
         writeRowDetails();
     }
@@ -332,7 +334,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
     function drawAllStitches() {
         // resize canvas so that stitches are always squares
-        let squareWidth = Math.min(canvas.width / (baseStitchQty()*1), canvas.height / (nbrRows()*1 + 1))
+        // bug whereby continual resize was shrinking canvas space
+        //let squareWidth = Math.min(canvas.width / (baseStitchQty()*1), canvas.height / (nbrRows()*1 + 1))
+        let squareWidth = Math.min(initCanvasWidth / (baseStitchQty()*1), initCanvasHeight / (nbrRows()*1 + 1))
         canvas.setAttribute('width', squareWidth * (baseStitchQty()*1));
         canvas.setAttribute('height', squareWidth * (nbrRows()*1+1));
 
@@ -678,7 +682,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     function resetChart(){
-        resetColors();
+        //resetColors();
         // update local storage with new values
         localStorage.setItem('rbq', $('#baseStitches').val()>0 ? $('#baseStitches').val() : 20);
         localStorage.setItem('rsz', $('#nbrRows').val()>0   ? $('#nbrRows').val()   : 20);
