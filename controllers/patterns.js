@@ -16,6 +16,7 @@ const patternSchema = new mongoose.Schema(
         colors: String,
         ddStitches: String,
         pattern: String,
+        rowColors: String
     },
     {
         timestamps: true,
@@ -51,6 +52,22 @@ exports.renderPatternList = async  (req, res, userMsg) => {
 
 }
 
+exports.renamePattern = async (req, res, usermsg) => {
+    console.log('renaming pattern from ' + req.body.from + ' to ' + req.body.to + '(type = ' + req.body.tp + ')');
+    var foundPattern = await Pattern.findOne({userEmail: req.session.user, 
+                                              patternType: req.body.tp,
+                                              pattern:   req.body.from});
+    if(foundPattern) {
+        try {
+            await foundPattern.updateOne(
+                {
+                    pattern: req.body.to
+                });
+        } catch(error) {
+            console.log(error);
+        }
+    }
+}
 exports.saveCurrentPattern = async (req, res, usermsg) => {
     var foundPattern = await Pattern.findOne({userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t});
     if(foundPattern) {
@@ -64,6 +81,7 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                     ddStitches: req.body.dd,
                     pattern: req.body.t,
                     PatternType: req.body.tp,
+                    rowColors: req.body.rowc
                 });
         } catch (error) {
             console.log(error);
@@ -79,6 +97,7 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                 ddStitches: req.body.dd,
                 pattern: req.body.t,
                 patternType: req.body.tp,
+                rowColors: req.body.rowc,
                 createdAt: Date.now(),
             }).save();
         } catch (error) {

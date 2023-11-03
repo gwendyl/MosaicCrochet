@@ -98,3 +98,16 @@ function hexColorDelta(hex1, hex2) {
     return (r + g + b) / 3;
 }
 
+function renamePattern(fromName, toName, tp) {
+    axios.post('/renamePattern', {
+        from: fromName,
+        to: toName,
+        tp: tp
+    })
+    .then(function (response) {
+        console.log(response);
+    })
+    .catch(function (error) {
+        console.log(error);
+    });
+}

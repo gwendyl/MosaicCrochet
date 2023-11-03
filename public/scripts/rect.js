@@ -16,6 +16,8 @@ document.addEventListener("DOMContentLoaded", function(){
     $('#color2').val(colorsArrayWithHash()[2]);
     $('#color3').val(colorsArrayWithHash()[3]);
  
+    var colorPicker = null; // Store a reference to the color picker element
+    var popup = null; // Store a reference to the popup container
 
     
     // hard to drop down onto first circle or two
@@ -62,7 +64,24 @@ document.addEventListener("DOMContentLoaded", function(){
 
     // var menuNode = document.getElementById('menu');
 
-    canvas.addEventListener('click', (e) => {
+    const button = document.getElementById('button')
+    let timer
+    canvas.addEventListener('click', event => {
+        if (event.detail === 1) {
+            timer = setTimeout(() => {
+            processCanvasSingleClick(event);
+            }, 200)
+        }
+    })
+
+    document.addEventListener("click", closeColorPickerOutside);
+
+    canvas.addEventListener('dblclick', event => {
+        clearTimeout(timer)
+        processCanvasDoubleClick(event);
+    })
+
+    function processCanvasSingleClick(e) {
         const pos = {
             x: e.clientX,
             y: e.clientY
@@ -71,39 +90,100 @@ document.addEventListener("DOMContentLoaded", function(){
         
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
-                // if(stitch.writtenInstruction == "sc"){
-                //     console.log('sc clicked on row ' + stitch.rowId);
-                //     // create pop up menu here
-                //     let humanId = stitch.rowId + 1;
-                //     $("#pulse-button").html('Pulse ' + humanId);
-                //     // $("#btnAddProfile").html('Save');
-                //     $("#delete-button").html('Delete ' + humanId);
-
-                //     menuNode.style.display = 'block';
-                //     var containerRect = canvas.getBoundingClientRect();
-            
-                //     menuNode.style.left =
-                //       containerRect.left + pos.x + 4 + "px";
-                //     menuNode.style.top =
-                //       containerRect.top + pos.y + 4 + "px";
-            
-                //     return;
-                // }
                 attemptDropDown(stitch, true);
             }
         })
         drawAllStitches();
         writeRowDetails();
+    }
 
-    });
+    function processCanvasDoubleClick(e){
+        openColorPicker(e);
+    }
+
+    function openColorPicker(e) {
+        e.preventDefault();
+
+       // first, detect the row
+        const pos = {
+            x: e.clientX,
+            y: e.clientY
+        };
+        const canvasPos = toCanvasCoords(canvas, pos.x, pos.y);
+        
+        let chosenRow;
+        stitches.forEach(stitch => {
+            if (isIntersect(canvasPos, stitch)) {
+                chosenRow = stitch.rowId;
+            }
+        });
+        console.log('chosen row: ' + chosenRow);
+        console.log('base color: ' + rows[chosenRow].baseColorId);
+        console.log('color: ' + rows[chosenRow].color);
+        // Create an input element of type color
+        colorPicker = document.createElement("input");
+        colorPicker.type = "color";
+        colorPicker.value = colorsArrayWithHash()[rows[chosenRow].baseColorId];
+        colorPicker.addEventListener("change", function () {
+            // get the new color, and close the color picker
+            rows[chosenRow].color = colorPicker.value;
+            closeColorPicker();
+            drawAllStitches();
+        });
+
+        // Create a button
+        var button = document.createElement("button");
+        button.textContent = "Reset";
+        button.addEventListener("click", function () {
+            // Close the color picker and button container
+            rows[chosenRow].color = null;
+            closeColorPicker();
+            drawAllStitches();
+        });
+
+        // Get the cursor position adjusted for window scroll
+        var x = e.clientX + window.scrollX;
+        var y = e.clientY + window.scrollY;
+
+        // Create a container for the color picker and button
+        popup = document.createElement("div");
+        popup.style.position = "absolute";
+        popup.style.left = x + "px";
+        popup.style.top = y + "px";
+        popup.appendChild(colorPicker);
+        popup.appendChild(button);
+
+    // Append the color picker to the document body
+        document.body.appendChild(popup);
+
+        // Trigger a click event on the color picker to open it
+        // setTimeout(function () {
+        //     colorPicker.click();
+        // }, 100);
+    }
+
+    function closeColorPicker() {
+        if (popup) {
+            document.body.removeChild(popup);
+            popup = null;
+        }
+    }
+
+    function closeColorPickerOutside(event) {
+        if (popup && event.target !== popup) {
+            closeColorPicker();
+        }
+    }
 
     let nameField = document.getElementById('patternNameInput');
     nameField.addEventListener("change", function() {
+        renamePattern(patternName(), nameField.value, 'rct');
         localStorage.setItem('rt', nameField.value);
         $('#patternName').text(patternName());
         $('#patternNameInput').addClass("isHidden");
         $('#patternNameLabel').addClass("isHidden");
-        saveNow();
+
+        //saveNow();
     });
     
     let renameButton = document.getElementById('rename');
@@ -219,7 +299,8 @@ document.addEventListener("DOMContentLoaded", function(){
                 humanId: j + 1,
                 stitchCount: baseStitchQty(),
                 baseColorId: currColorId,
-                firstStitchNbr: id
+                firstStitchNbr: id,
+                color: rowColorsArray()[j]
             }
             rows.push(currentRow);
 
@@ -356,12 +437,13 @@ document.addEventListener("DOMContentLoaded", function(){
         // foundation row 
         /////////////////////////////////////////////
         // find row 0 color
-        let row0color = rows[0].baseColorId;
+        let row0color = colorsArrayWithHash()[rows[0].baseColorId];
+        if (rows[0].color) row0color = rows[0].color;
 
         let startingY = canvas.height - h/2;
 
         for (let i = 0; i < baseStitchQty(); i++) {
-            ctx.fillStyle = colorsArrayWithHash()[row0color];
+            ctx.fillStyle = row0color;
             ctx.beginPath();
             let startingX = canvas.width - (i+1)*w;
 
@@ -378,12 +460,13 @@ document.addEventListener("DOMContentLoaded", function(){
         /////////////////////////////////////////////
         // finishing row 
         /////////////////////////////////////////////
-        let topRowColor = rows[rows.length -1].baseColorId;
+        let topRowColor = colorsArrayWithHash()[rows[rows.length -1].baseColorId];
+        if (rows[rows.length -1].color) topRowColor = rows[rows.length -1].color;
 
         startingY = 0;
 
         for (let i = 0; i < baseStitchQty(); i++) {
-            ctx.fillStyle = colorsArrayWithHash()[topRowColor];
+            ctx.fillStyle = topRowColor;
             ctx.beginPath();
             let startingX = canvas.width - (i+1)*w;
 
@@ -407,7 +490,11 @@ document.addEventListener("DOMContentLoaded", function(){
             ////////////////////////////
             //ctx.fillStyle = colorsArrayWithHash()[stitch.currColorId];
             // no longer deriving color from above... always use own color and drop down instead
-            ctx.fillStyle = colorsArrayWithHash()[rows[stitch.rowId].baseColorId];
+            if(rows[stitch.rowId].color) {
+                ctx.fillStyle = rows[stitch.rowId].color;
+            } else {
+                ctx.fillStyle = colorsArrayWithHash()[rows[stitch.rowId].baseColorId];
+            }
             ctx.beginPath();
             let derivedLocation = stitchLocation(stitch);
 
@@ -632,7 +719,12 @@ document.addEventListener("DOMContentLoaded", function(){
         // figure out color div definition
         var colorDiv = document.createElement('div');
         colorDiv.className = 'box';
-        colorDiv.style.backgroundColor =  colorsArrayWithHash()[row.baseColorId];
+        if (row.color) {
+            colorDiv.style.backgroundColor = row.color;
+        } else {
+            colorDiv.style.backgroundColor =  colorsArrayWithHash()[row.baseColorId];
+        }
+        
         
 
         var ul = document.getElementById("rowsList");
@@ -730,6 +822,13 @@ document.addEventListener("DOMContentLoaded", function(){
         })
         //const stitchesJson = JSON.stringify(shortStitches);
 
+        // save the specialized row colors
+        var srTemp = [];
+        rows.forEach(r => {
+            srTemp.push(r.color);
+        })
+        localStorage.setItem('rowc', JSON.stringify(srTemp));
+
                 
 
         axios.post('/savePattern', {
@@ -740,7 +839,8 @@ document.addEventListener("DOMContentLoaded", function(){
             t:  patternName(),
             id: localStorage.getItem('rid'),
             tp: 'rct',
-            pb: localStorage.getItem('pb')
+            pb: localStorage.getItem('pb'),
+            rowc: localStorage.getItem('rowc')
         })
         .then(function (response) {
             console.log(response);
@@ -749,15 +849,6 @@ document.addEventListener("DOMContentLoaded", function(){
             console.log(error);
         });
     }
-
-    // document.getElementById('delete-button').addEventListener('click', () => {
-    //     let rowNbr = $("#delete-button").html();
-    //     rowNbr = rowNbr.replace(/\D/g,'') - 1;
-    // });
-    // const pulseButton = document.getElementById('pulse-button')
-    // pulseButton.addEventListener('click', () => {
-    //     console.log("pulse clicked");
-    // });
 
 }); //document ready
 
@@ -771,7 +862,8 @@ function initializeLocalStorage() {
     if ($('#opName').length > 0) localStorage.setItem('rt', $('#opName').val());
     if ($('#opId').length > 0) localStorage.setItem('rid', $('#opId').val());
     if ($('#oppb').length > 0) localStorage.setItem('pb', $('#oppb').val());
-
+    if ($('#opRowColors').length > 0) localStorage.setItem('rowc', $('#opRowColors').val());
+    
     // if we had a pattern, then
     if (!localStorage.getItem("rt")) localStorage.setItem("rp",0); else localStorage.setItem("rp",1);
 
@@ -782,7 +874,7 @@ function initializeLocalStorage() {
     if (!localStorage.getItem("rca"))  localStorage.setItem("rca",  JSON.stringify(defaultColors));
     if (!localStorage.getItem("rsts")) localStorage.setItem("rsts", JSON.stringify([]));
     if (!localStorage.getItem("pb")) localStorage.setItem("pb",0);
-    
+    if (!localStorage.getItem("rowc")) localStorage.setItem("pb",JSON.stringify([]));
 
 }
 
@@ -825,20 +917,8 @@ function nbrRows() {
 function shortStitches() {
     return JSON.parse(localStorage.getItem('rsts'));
 }
+function rowColorsArray() {
+    if (localStorage.getItem('rowc')) return JSON.parse(localStorage.getItem('rowc'));
+    else return [];
+}
 
-// /// needs to be moved to a shared file
-// function sendInfoAlert(textMsg, toDiv) {
-//     var alertImg = document.createElement("img");
-//     alertImg.setAttribute('src', "close.soon");
-//     alertImg.setAttribute('style', "display:none");
-//     alertImg.setAttribute('onerror', "(function(el){ setTimeout(function(){ $(el).parent().remove(); },2000 ); })(this);");
-
-//     let textNode = document.createTextNode(textMsg);
-//     var alertDiv = document.createElement("div");
-//     let divClass = "alert alert-dark overlay";
-//     alertDiv.setAttribute('class', divClass);
-//     alertDiv.appendChild(textNode);
-//     alertDiv.appendChild(alertImg);
-
-//     toDiv.appendChild(alertDiv);
-// }

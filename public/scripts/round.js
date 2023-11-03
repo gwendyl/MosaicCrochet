@@ -59,6 +59,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
  
     canvas.addEventListener('click', (e) => {
+
         const pos = {
             x: e.clientX,
             y: e.clientY
@@ -78,11 +79,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
     let nameField = document.getElementById('patternNameInput');
     nameField.addEventListener("change", function() {
+        renamePattern(patternName(), nameField.value, 'rnd');
         localStorage.setItem('t', nameField.value);
         $('#patternName').text(patternName());
         $('#patternNameInput').addClass("isHidden");
         $('#patternNameLabel').addClass("isHidden");
-        saveNow();
+        //saveNow();
     });
     
     let renameButton = document.getElementById('rename');
@@ -96,6 +98,17 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     });
     
+    let copyButton = document.getElementById('copy');
+    copyButton.addEventListener("click", function() {
+        // generate a new name as name + (copy)
+        console.log('copy button clicked');
+        localStorage.setItem('t', patternName()+' (copy)')
+        console.log('setting local storage title to ' + patternName() + 'and calling SaveNow');
+        $('#patternName').text(patternName());
+        saveNow();
+    });
+    
+
     let goButton = document.getElementById('goButton');
     goButton.addEventListener("click", function() {
         resetChart();

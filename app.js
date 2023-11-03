@@ -87,6 +87,11 @@ app.post("/savePattern",   function(req,res) {
     patterns.saveCurrentPattern(req,res,"");
 });
 
+app.post("/renamePattern",   function(req,res) {
+    patterns.renamePattern(req,res,"");
+});
+
+
 app.post("/deletePattern", function(req,res) {
     patterns.deletePattern(req, res,"");
 }

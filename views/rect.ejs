@@ -30,6 +30,14 @@
                     <input class="isHidden" type="text" name="patternNameInput" id="patternNameInput" required>
                     <label class="isHidden" id="patternNameLabel" for="patternNameInput">New Name</label><br>
                 </div>
+                <div class="col noPrint">
+                    <button class="btn-secondary" name = "copy" id = "copy" title='Copy Pattern'>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-copy" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M4 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V2Zm2-1a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H6ZM2 5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1h1v1a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h1v1H2Z"/>
+                          </svg>
+                        Copy Pattern
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -125,6 +133,7 @@
  
         <div class="my-3 p-3 bg-white rounded box-shadow">
             <p class="subtitle">Click on a stitch to indicate that it should drop down.</p>
+            <p class="subtitle">Doubleclick on a row to change the color of that specific row.</p>
             <canvas id="myCanvas"  class='img-responsive' width="1000" height="1000" style="border:1px solid #000000;"></canvas>
         </div>
         <div class="my-3 p-3 bg-white rounded box-shadow" id="rowsListDiv">
@@ -157,6 +166,8 @@
             <input type="text" name = "opDdStitches" id="opDdStitches" value="<%= pattern.ddStitches %>" >
             <input type="text" name = "opColors" id="opColors" value="<%= pattern.colors %>" >
             <input type="text" name = "opName" id="opName" value="<%= pattern.pattern %>" >
+            <input type="text" name = "opRowColors" id="opRowColors" value="<%= pattern.rowColors %>" >
+
         </div>
     <% } %>
 
