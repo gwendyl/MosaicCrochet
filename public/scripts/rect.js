@@ -117,9 +117,6 @@ document.addEventListener("DOMContentLoaded", function(){
                 chosenRow = stitch.rowId;
             }
         });
-        console.log('chosen row: ' + chosenRow);
-        console.log('base color: ' + rows[chosenRow].baseColorId);
-        console.log('color: ' + rows[chosenRow].color);
         // Create an input element of type color
         colorPicker = document.createElement("input");
         colorPicker.type = "color";

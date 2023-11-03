@@ -53,7 +53,6 @@ exports.renderPatternList = async  (req, res, userMsg) => {
 }
 
 exports.renamePattern = async (req, res, usermsg) => {
-    console.log('renaming pattern from ' + req.body.from + ' to ' + req.body.to + '(type = ' + req.body.tp + ')');
     var foundPattern = await Pattern.findOne({userEmail: req.session.user, 
                                               patternType: req.body.tp,
                                               pattern:   req.body.from});

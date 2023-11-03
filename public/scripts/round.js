@@ -16,6 +16,11 @@ document.addEventListener("DOMContentLoaded", function(){
     $('#color2').val(colorsArrayWithHash()[2]);
     $('#color3').val(colorsArrayWithHash()[3]);
  
+
+    var colorPicker = null; // Store a reference to the color picker element
+    var popup = null; // Store a reference to the popup container
+
+
     // hard to drop down onto first circle or two
     let startRound = 2;  // cant land on rounds 0 or 1
     // show numbers on stitches.  Useful for debugging
@@ -58,8 +63,24 @@ document.addEventListener("DOMContentLoaded", function(){
         drawAllStitches();
     });
  
-    canvas.addEventListener('click', (e) => {
+    const button = document.getElementById('button')
+    let timer
+    canvas.addEventListener('click', (event) => {
+        if (event.detail === 1) {
+            timer = setTimeout(() => {
+            processCanvasSingleClick(event);
+            }, 200)
+        }
+    })
 
+    document.addEventListener("click", closeColorPickerOutside);
+    
+    canvas.addEventListener('dblclick', event => {
+        clearTimeout(timer)
+        processCanvasDoubleClick(event);
+    })
+
+    function processCanvasSingleClick(e) {
         const pos = {
             x: e.clientX,
             y: e.clientY
@@ -75,8 +96,83 @@ document.addEventListener("DOMContentLoaded", function(){
         drawAllStitches();
         writeRoundDetails();
 
-    });
+    };
 
+    function processCanvasDoubleClick(e){
+        openColorPicker(e);
+    }
+
+    function openColorPicker(e) {
+        e.preventDefault();
+
+       // first, detect the row
+        const pos = {
+            x: e.clientX,
+            y: e.clientY
+        };
+        const canvasPos = toCanvasCoords(canvas, pos.x, pos.y);
+        
+        let chosenRow;
+        stitches.forEach(stitch => {
+            if (isIntersect(canvasPos, stitch)) {
+                chosenRound = stitch.roundId;
+            }
+        });
+        // Create an input element of type color
+        colorPicker = document.createElement("input");
+        colorPicker.type = "color";
+        colorPicker.value = colorsArrayWithHash()[rounds[chosenRound].baseColorId];
+        colorPicker.addEventListener("change", function () {
+            // get the new color, and close the color picker
+            rounds[chosenRound].color = colorPicker.value;
+            closeColorPicker();
+            drawAllStitches();
+        });
+
+        // Create a button
+        var button = document.createElement("button");
+        button.textContent = "Reset";
+        button.addEventListener("click", function () {
+            // Close the color picker and button container
+            rounds[chosenRound].color = null;
+            closeColorPicker();
+            drawAllStitches();
+        });
+                // Get the cursor position adjusted for window scroll
+                var x = e.clientX + window.scrollX;
+                var y = e.clientY + window.scrollY;
+        
+                // Create a container for the color picker and button
+                popup = document.createElement("div");
+                popup.style.position = "absolute";
+                popup.style.left = x + "px";
+                popup.style.top = y + "px";
+                popup.appendChild(colorPicker);
+                popup.appendChild(button);
+        
+            // Append the color picker to the document body
+                document.body.appendChild(popup);
+        
+                // Trigger a click event on the color picker to open it
+                // setTimeout(function () {
+                //     colorPicker.click();
+                // }, 100);
+            }
+        
+            function closeColorPicker() {
+                if (popup) {
+                    document.body.removeChild(popup);
+                    popup = null;
+                }
+            }
+        
+            function closeColorPickerOutside(event) {
+                if (popup && event.target !== popup) {
+                    closeColorPicker();
+                }
+            }
+        
+        
     let nameField = document.getElementById('patternNameInput');
     nameField.addEventListener("change", function() {
         renamePattern(patternName(), nameField.value, 'rnd');
@@ -101,9 +197,7 @@ document.addEventListener("DOMContentLoaded", function(){
     let copyButton = document.getElementById('copy');
     copyButton.addEventListener("click", function() {
         // generate a new name as name + (copy)
-        console.log('copy button clicked');
         localStorage.setItem('t', patternName()+' (copy)')
-        console.log('setting local storage title to ' + patternName() + 'and calling SaveNow');
         $('#patternName').text(patternName());
         saveNow();
     });
@@ -210,7 +304,8 @@ document.addEventListener("DOMContentLoaded", function(){
                 humanId: j + 1,
                 stitchCount: baseStitchQty() * (j + 1),
                 baseColorId: currColorId,
-                firstStitchNbr: id
+                firstStitchNbr: id,
+                color: rowColorsArray()[j]
             }
             rounds.push(currentRound);
     
@@ -353,8 +448,8 @@ document.addEventListener("DOMContentLoaded", function(){
                 
         stitches.forEach(stitch => {
             // draw a little oval behind the stitch to indicate the base color of that round
-            //ctx.fillStyle = colorsArrayWithHash()[getBaseColorId(stitch.roundId)];
             ctx.fillStyle = colorsArrayWithHash()[rounds[stitch.roundId].baseColorId];
+            if(rounds[stitch.roundId].color) ctx.fillStyle = rounds[stitch.roundId].color;
             ctx.beginPath();
             let derivedLocation = stitchLocation(stitch);
             ctx.ellipse(derivedLocation.x, derivedLocation.y, radiusY, radiusX / 2, stitch.theta, startAngle, endAngle);
@@ -362,8 +457,8 @@ document.addEventListener("DOMContentLoaded", function(){
             ctx.fill();
 
             // a stitch is never any other color, so can use base color here
-            //ctx.fillStyle = colorsArrayWithHash()[stitch.baseColorId];
             ctx.fillStyle = colorsArrayWithHash()[rounds[stitch.roundId].baseColorId];
+            if(rounds[stitch.roundId].color) ctx.fillStyle = rounds[stitch.roundId].color;
 
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
@@ -403,6 +498,7 @@ document.addEventListener("DOMContentLoaded", function(){
                 ctx.lineWidth = 2*radiusX;
                 //ctx.strokeStyle = colorsArrayWithHash()[stitch.baseColorId];
                 ctx.strokeStyle = colorsArrayWithHash()[rounds[stitch.roundId].baseColorId];
+                if(rounds[stitch.roundId].color) ctx.strokeStyle = rounds[stitch.roundId].color;
                 ctx.beginPath();
                 ctx.moveTo(derivedLocation.x, derivedLocation.y);
                 ctx.lineTo(toPos.x, toPos.y);
@@ -499,7 +595,8 @@ document.addEventListener("DOMContentLoaded", function(){
         //let baseColor = colorsArrayNoHash()[stitch.baseColorId]
         let baseColor = colorsArrayNoHash()[rounds[stitch.roundId].baseColorId];
 
-        if (hexColorDelta(yarnColor, baseColor)<.96){
+        if (hexColorDelta(yarnColor, baseColor)<.96 &&
+            hexColorDelta(yarnColor, rounds[stitch.roundId].color)){
             sendRoundInfoAlert('Stitch is already dropped upon.  Cannot itself drop down.');
             return;
         }
@@ -777,7 +874,13 @@ document.addEventListener("DOMContentLoaded", function(){
         })
         //const stitchesJson = JSON.stringify(shortStitches);
     
-                
+        // save the specialized row colors
+        var srTemp = [];
+        rounds.forEach(r => {
+            srTemp.push(r.color);
+        })
+        localStorage.setItem('rowc', JSON.stringify(srTemp));
+
         axios.post('/savePattern', {
             dd: localStorage.getItem('sts'),
             bq: baseStitchQty(),
@@ -786,7 +889,8 @@ document.addEventListener("DOMContentLoaded", function(){
             t:  patternName(),
             id: localStorage.getItem('id'),
             tp: 'rnd',
-            pb: localStorage.getItem('pb')
+            pb: localStorage.getItem('pb'),
+            rowc: localStorage.getItem('rowc')
         })
         .then(function (response) {
             console.log(response);
@@ -818,6 +922,7 @@ function initializeLocalStorage() {
     if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
     if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
     if ($('#oppb').length > 0) localStorage.setItem('pb', $('#oppb').val());
+    if ($('#opRowColors').length > 0) localStorage.setItem('rowc', $('#opRowColors').val());
 
     // if we had a pattern, then
     if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
@@ -829,7 +934,8 @@ function initializeLocalStorage() {
     if (!localStorage.getItem("ca"))  localStorage.setItem("ca",  JSON.stringify(defaultColors));
     if (!localStorage.getItem("sts")) localStorage.setItem("sts", JSON.stringify([]));
     if (!localStorage.getItem("pb")) localStorage.setItem("pb",0);
-    
+    if (!localStorage.getItem("rowc")) localStorage.setItem("pb",JSON.stringify([]));
+
 
 }
 
@@ -873,4 +979,7 @@ function stitchSize() {
 function shortStitches() {
     return JSON.parse(localStorage.getItem('sts'));
 }
-
+function rowColorsArray() {
+    if (localStorage.getItem('rowc')) return JSON.parse(localStorage.getItem('rowc'));
+    else return [];
+}
