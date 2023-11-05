@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function(){
         };
         const canvasPos = toCanvasCoords(canvas, pos.x, pos.y);
         
-        let chosenRow;
+        let chosenRound;
         stitches.forEach(stitch => {
             if (isIntersect(canvasPos, stitch)) {
                 chosenRound = stitch.roundId;
@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", function(){
         colorPicker = document.createElement("input");
         colorPicker.type = "color";
         colorPicker.value = colorsArrayWithHash()[rounds[chosenRound].baseColorId];
+        if(rounds[chosenRound].color) colorPicker.value = rounds[chosenRound].color;
         colorPicker.addEventListener("change", function () {
             // get the new color, and close the color picker
             rounds[chosenRound].color = colorPicker.value;

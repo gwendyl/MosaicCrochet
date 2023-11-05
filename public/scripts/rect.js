@@ -121,6 +121,7 @@ document.addEventListener("DOMContentLoaded", function(){
         colorPicker = document.createElement("input");
         colorPicker.type = "color";
         colorPicker.value = colorsArrayWithHash()[rows[chosenRow].baseColorId];
+        if(rows[chosenRow].color) colorPicker.value = rows[chosenRow].color;
         colorPicker.addEventListener("change", function () {
             // get the new color, and close the color picker
             rows[chosenRow].color = colorPicker.value;
