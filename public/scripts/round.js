@@ -776,9 +776,13 @@ document.addEventListener("DOMContentLoaded", function(){
         // figure out color div definition
         var colorDiv = document.createElement('div');
         colorDiv.className = 'box';
-        colorDiv.style.backgroundColor =  colorsArrayWithHash()[round.baseColorId];
-        
-
+        //colorDiv.style.backgroundColor =  colorsArrayWithHash()[round.baseColorId];
+        if (round.color) {
+            colorDiv.style.backgroundColor = round.color;
+        } else {
+            colorDiv.style.backgroundColor =  colorsArrayWithHash()[round.baseColorId];
+        }
+    
         var ul = document.getElementById("roundsList");
 
         var li = document.createElement("li");
