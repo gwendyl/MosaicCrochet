@@ -841,9 +841,18 @@ document.addEventListener("DOMContentLoaded", function(){
             rowc: localStorage.getItem('rowc')
         })
         .then(function (response) {
-            console.log(response);
+            if (response.status >= 200 && response.status < 300) {
+                // If successful, reload the webpage
+                // location.reload();
+                sendRowInfoAlert('Pattern Saved');
+              } else {
+                // If not successful (e.g., server error), handle the error
+                alert('Save was not successful.  Please try again.');
+                // You might want to display an error message or handle it in another way
+              }
         })
         .catch(function (error) {
+            alert('Save was not successful.  Please try again.');
             console.log(error);
         });
     }

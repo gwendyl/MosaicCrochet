@@ -67,27 +67,64 @@ exports.renamePattern = async (req, res, usermsg) => {
         }
     }
 }
+// exports.saveCurrentPattern = async (req, res, usermsg) => {
+//     var foundPattern = await Pattern.findOne({userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t});
+//     if(foundPattern) {
+//         try {
+//             await Pattern.updateOne({userEmail:req.session.user, patternType: req.body.tp, pattern:req.body.t}, 
+//                 {
+//                     userEmail:req.session.user,
+//                     baseStitchCount: req.body.bq,
+//                     stitchSize: req.body.sz,
+//                     colors: req.body.ca,
+//                     ddStitches: req.body.dd,
+//                     pattern: req.body.t,
+//                     PatternType: req.body.tp,
+//                     rowColors: req.body.rowc
+//                 });
+//         } catch (error) {
+//             console.log(error);
+//         }
+
+//     } else {
+//         try {
+//             foundPattern = await new Pattern({
+//                 userEmail: req.session.user,
+//                 baseStitchCount: req.body.bq,
+//                 stitchSize: req.body.sz,
+//                 colors: req.body.ca,
+//                 ddStitches: req.body.dd,
+//                 pattern: req.body.t,
+//                 patternType: req.body.tp,
+//                 rowColors: req.body.rowc,
+//                 createdAt: Date.now(),
+//             }).save();
+//         } catch (error) {
+//             console.console.log(error);
+//         }
+        
+//     } 
+//  }
+
 exports.saveCurrentPattern = async (req, res, usermsg) => {
-    var foundPattern = await Pattern.findOne({userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t});
-    if(foundPattern) {
-        try {
-            await Pattern.updateOne({userEmail:req.session.user, patternType: req.body.tp, pattern:req.body.t}, 
+    try {
+        let foundPattern = await Pattern.findOne({ userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t });
+
+        if (foundPattern) {
+            await Pattern.updateOne(
+                { userEmail: req.session.user, patternType: req.body.tp, pattern: req.body.t },
                 {
-                    userEmail:req.session.user,
+                    userEmail: req.session.user,
                     baseStitchCount: req.body.bq,
                     stitchSize: req.body.sz,
                     colors: req.body.ca,
                     ddStitches: req.body.dd,
                     pattern: req.body.t,
-                    PatternType: req.body.tp,
+                    patternType: req.body.tp,
                     rowColors: req.body.rowc
-                });
-        } catch (error) {
-            console.log(error);
-        }
-
-    } else {
-        try {
+                }
+            );
+        } else {
             foundPattern = await new Pattern({
                 userEmail: req.session.user,
                 baseStitchCount: req.body.bq,
@@ -99,12 +136,14 @@ exports.saveCurrentPattern = async (req, res, usermsg) => {
                 rowColors: req.body.rowc,
                 createdAt: Date.now(),
             }).save();
-        } catch (error) {
-            console.console.log(error);
         }
-        
-    } 
- }
+
+        res.status(200).json({ message: 'Pattern saved successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error saving pattern' });
+    }
+};
 
  exports.deletePattern = async (req, res, usermsg) => {
 

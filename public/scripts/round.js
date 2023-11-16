@@ -7,7 +7,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
     // set the form fields
     $('#patternName').text(patternName());
-
     $('#nbrColors').val(nbrColors());
     $('#baseStitches').val(baseStitchQty());
     $('#stitchSize').val(stitchSize());
@@ -827,6 +826,10 @@ document.addEventListener("DOMContentLoaded", function(){
         var errorDiv = document.getElementById('errorDiv');
         sendInfoAlert(textMsg, errorDiv);
     }
+    function sendSaveAlert(textMsg) {
+        var errorDiv = document.getElementById('saveMsgDiv');
+        sendInfoAlert(textMsg, errorDiv);
+    }
 
     function resetChart(){
         resetColors();
@@ -898,12 +901,20 @@ document.addEventListener("DOMContentLoaded", function(){
             rowc: localStorage.getItem('rowc')
         })
         .then(function (response) {
-            console.log(response);
+            if (response.status >= 200 && response.status < 300) {
+                // If successful, reload the webpage
+                // location.reload();
+                sendSaveAlert('Pattern successfully saved');
+              } else {
+                // If not successful (e.g., server error), handle the error
+                alert('Save was not successful.  Please try again.');
+                // You might want to display an error message or handle it in another way
+              }
         })
         .catch(function (error) {
+            alert('Save was not successful.  Please try again.');
             console.log(error);
         });
-    
     }
 }); //document ready
 
@@ -920,17 +931,17 @@ function nextDDPosition (startPosition) {
 function initializeLocalStorage() {
     // first check to see if we were passed a pattern
     localStorage.clear();
-    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq', $('#opBaseStitches').val());
-    if ($('#opStitchSize').length > 0) localStorage.setItem('sz', $('#opStitchSize').val());
-    if ($('#opDdStitches').length > 0) localStorage.setItem('sts', $('#opDdStitches').val());
-    if ($('#opColors').length > 0) localStorage.setItem('ca', $('#opColors').val());
-    if ($('#opName').length > 0) localStorage.setItem('t', $('#opName').val());
-    if ($('#opId').length > 0) localStorage.setItem('id', $('#opId').val());
-    if ($('#oppb').length > 0) localStorage.setItem('pb', $('#oppb').val());
-    if ($('#opRowColors').length > 0) localStorage.setItem('rowc', $('#opRowColors').val());
+    if ($('#opBaseStitches').length > 0) localStorage.setItem('bq',   $('#opBaseStitches').val());
+    if ($('#opStitchSize').length > 0)   localStorage.setItem('sz',   $('#opStitchSize').val());
+    if ($('#opDdStitches').length > 0)   localStorage.setItem('sts',  $('#opDdStitches').val());
+    if ($('#opColors').length > 0)       localStorage.setItem('ca',   $('#opColors').val());
+    if ($('#opName').length > 0)         localStorage.setItem('t',    $('#opName').val());
+    if ($('#opId').length > 0)           localStorage.setItem('id',   $('#opId').val());
+    if ($('#oppb').length > 0)           localStorage.setItem('pb',   $('#oppb').val());
+    if ($('#opRowColors').length > 0)    localStorage.setItem('rowc', $('#opRowColors').val());
 
     // if we had a pattern, then
-    if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1);
+    //if (!localStorage.getItem("t")) localStorage.setItem("p",0); else localStorage.setItem("p",1); - commented out on 11/16 because I don't think it does anything
 
     if (!localStorage.getItem("t")) localStorage.setItem("t","Draft Pattern");
     if (!localStorage.getItem("bq")) localStorage.setItem("bq",6);
@@ -978,6 +989,30 @@ function baseStitchQty() {
 function patternName() {
     return localStorage.getItem('t');
 }
+// function updateTime() {
+//     console.log(localStorage.getItem('tm'));
+ 
+
+//     const dateString = localStorage.getItem('tm');
+//     const date = new Date(dateString);
+
+//     const options = {
+//        month: 'short',
+//        day: '2-digit',
+//        year: 'numeric',
+//        hour: 'numeric',
+//        minute: 'numeric',
+//        second: 'numeric',
+//        hour12: true
+//     };
+
+//     const formattedDate = date.toLocaleString('en-US', options);
+//     console.log(formattedDate); // Output: "Nov 05, 2023, 1:56:35 PM"
+
+
+
+//     return formattedDate;
+// }
 function stitchSize() {
     return localStorage.getItem('sz');
 }
